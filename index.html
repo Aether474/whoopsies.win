@@ -17,19 +17,19 @@
     <meta name="twitter:title" content="@.envy">
     <meta name="twitter:description" content="envy is just envy,">
 
-    <link rel="icon" type="image/jpeg" href="images/pfp.jpg?v=5">
-    <link rel="apple-touch-icon" href="images/pfp.jpg?v=5">
+    <link rel="icon" type="image/jpeg" href="images/pfp.jpg?v=6">
+    <link rel="apple-touch-icon" href="images/pfp.jpg?v=6">
 
     <link rel="preconnect" href="https://api.fontshare.com" crossorigin>
     <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700,900&display=swap">
-    <link rel="stylesheet" href="css/style.css?v=5">
+    <link rel="stylesheet" href="css/style.css?v=6">
 </head>
 <body class="is-locked">
 
     <!-- Background video -->
     <div class="bg" aria-hidden="true">
-        <video id="bgVideo" autoplay muted loop playsinline preload="auto" poster="images/bg-poster.jpg?v=5">
-            <source src="images/bg.mp4?v=5" type="video/mp4">
+        <video id="bgVideo" autoplay muted loop playsinline preload="auto" poster="images/bg-poster.jpg?v=6">
+            <source src="images/bg.mp4?v=6" type="video/mp4">
         </video>
         <div class="bg__shade"></div>
     </div>
@@ -53,7 +53,7 @@
         <article class="card" id="card">
             <div class="card__avatar-wrap">
                 <button class="card__avatar" id="avatar" type="button" aria-label="profile picture" title="boop?">
-                    <img src="images/pfp.jpg?v=5" alt="" width="489" height="489">
+                    <img src="images/pfp.jpg?v=6" alt="" width="489" height="489">
                 </button>
                 <span class="status" id="status" hidden></span>
             </div>
@@ -84,6 +84,11 @@
             </div>
 
             <p class="card__bio" aria-live="polite"><span class="typed" id="typed"></span><span class="caret" aria-hidden="true"></span></p>
+
+            <button class="gb-open" id="gbOpen" type="button" hidden>
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16v4Z"/><path d="M13.5 6.5l4 4"/></svg>
+                sign the guestbook
+            </button>
 
             <footer class="card__footer">
                 <span class="card__views" title="views">
@@ -126,13 +131,39 @@
         </div>
     </div>
 
+    <!-- Guestbook -->
+    <div class="gb" id="gb" hidden>
+        <section class="gb__panel" role="dialog" aria-modal="true" aria-labelledby="gbTitle">
+            <header class="gb__head">
+                <h2 id="gbTitle">guestbook <span aria-hidden="true">&#9825;</span></h2>
+                <button class="gb__close" id="gbClose" type="button" aria-label="Close guestbook">&times;</button>
+            </header>
+
+            <form class="gb__form" id="gbForm" autocomplete="off" novalidate>
+                <input class="gb__input" id="gbName" name="name" type="text" maxlength="24" placeholder="your name" aria-label="Your name" required>
+                <textarea class="gb__input gb__textarea" id="gbMsg" name="message" maxlength="280" rows="3" placeholder="leave a little message&hellip;" aria-label="Message" required></textarea>
+                <input class="gb__trap" id="gbWebsite" name="website" type="text" tabindex="-1" autocomplete="off" aria-hidden="true">
+                <div class="gb__row">
+                    <span class="gb__count" id="gbCount">0/280</span>
+                    <button class="gb__send" id="gbSend" type="submit">send &#9825;</button>
+                </div>
+                <p class="gb__status" id="gbStatus" role="status" aria-live="polite"></p>
+                <p class="gb__note">messages show up after they&rsquo;re approved</p>
+            </form>
+
+            <ul class="gb__list" id="gbList"></ul>
+        </section>
+    </div>
+
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
     <div class="fx" id="fx" aria-hidden="true"></div>
 
-    <audio id="audio" src="media/sakura.mp3?v=5" loop preload="auto"></audio>
+    <audio id="audio" src="media/sakura.mp3?v=6" loop preload="auto"></audio>
 
-    <script src="js/weather.js?v=5" defer></script>
-    <script src="js/trail.js?v=5" defer></script>
-    <script src="js/main.js?v=5" defer></script>
+    <script src="js/weather.js?v=6" defer></script>
+    <script src="js/trail.js?v=6" defer></script>
+    <script src="js/main.js?v=6" defer></script>
+    <script src="js/guestbook-config.js?v=6"></script>
+    <script type="module" src="js/guestbook.js?v=6"></script>
 </body>
 </html>

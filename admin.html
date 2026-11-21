@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>guestbook admin · whoopsies</title>
+    <meta name="robots" content="noindex, nofollow">
+    <meta name="theme-color" content="#14080d">
+    <link rel="icon" type="image/jpeg" href="/images/pfp.jpg?v=6">
+    <link rel="preconnect" href="https://api.fontshare.com" crossorigin>
+    <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700,900&display=swap">
+    <style>
+        :root {
+            --pink-1: #ffccd5; --pink-2: #ff9ab5; --pink-3: #ff6699;
+            --muted: rgba(255, 236, 242, 0.7);
+            --edge: rgba(255, 204, 213, 0.16);
+        }
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            min-height: 100vh;
+            padding: 32px 18px 60px;
+            font-family: "Satoshi", system-ui, -apple-system, "Segoe UI", sans-serif;
+            color: #fff;
+            background: #14080d url("/images/bg-poster.jpg?v=6") center / cover fixed;
+            -webkit-font-smoothing: antialiased;
+        }
+        body::before { content: ""; position: fixed; inset: 0; background: rgba(12, 5, 10, 0.78); z-index: -1; }
+        main { max-width: 640px; margin: 0 auto; }
+        header { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 22px; }
+        h1 { font-size: 24px; font-weight: 800; }
+        h1 span { color: var(--pink-3); }
+        h2 { font-size: 15px; font-weight: 700; margin: 26px 0 10px; color: var(--pink-2); letter-spacing: .5px; }
+        h2 .n { color: var(--muted); font-weight: 600; }
+        .who { font-size: 13px; color: var(--muted); }
+        button {
+            font: 700 13px/1 inherit;
+            font-family: inherit;
+            padding: 8px 14px;
+            border-radius: 999px;
+            border: 1px solid var(--edge);
+            color: #fff;
+            background: rgba(255, 255, 255, 0.06);
+            cursor: pointer;
+        }
+        button:hover { background: rgba(255, 154, 181, 0.18); }
+        button:disabled { opacity: .5; cursor: progress; }
+        .primary { color: #1d0c14; background: linear-gradient(135deg, var(--pink-1), var(--pink-3)); border: 0; }
+        .primary:hover { filter: brightness(1.08); background: linear-gradient(135deg, var(--pink-1), var(--pink-3)); }
+        .danger:hover { background: rgba(242, 63, 67, 0.25); border-color: rgba(242, 63, 67, 0.5); }
+        .card {
+            padding: 22px;
+            background: rgba(24, 10, 18, 0.8);
+            border: 1px solid var(--edge);
+            border-radius: 18px;
+        }
+        .center { text-align: center; }
+        .center p { margin: 8px 0 16px; color: var(--muted); }
+        ul { list-style: none; display: grid; gap: 10px; }
+        li {
+            padding: 12px 14px;
+            background: rgba(24, 10, 18, 0.8);
+            border: 1px solid var(--edge);
+            border-radius: 14px;
+        }
+        .meta { display: flex; justify-content: space-between; gap: 10px; font-size: 12px; color: var(--muted); }
+        .name { font-weight: 700; font-size: 14px; color: var(--pink-1); overflow-wrap: anywhere; }
+        .msg { margin: 6px 0 10px; font-size: 14.5px; line-height: 1.45; white-space: pre-wrap; overflow-wrap: anywhere; }
+        .actions { display: flex; gap: 8px; }
+        .empty { padding: 14px; text-align: center; font-size: 13px; color: var(--muted); background: transparent; border: 1px dashed var(--edge); }
+        .err { color: #ffb0b0; }
+        a { color: var(--pink-2); }
+    </style>
+</head>
+<body>
+    <main>
+        <header>
+            <h1>guestbook admin <span>&#9825;</span></h1>
+            <div id="userBox"></div>
+        </header>
+        <div id="app"><div class="card center"><p>loading&hellip;</p></div></div>
+    </main>
+
+    <script src="/js/guestbook-config.js?v=6"></script>
+    <script type="module">
+        import { getBackend, timeAgo } from "/js/guestbook-backend.js?v=6";
+
+        const app = document.getElementById("app");
+        const userBox = document.getElementById("userBox");
+
+        function el(tag, cls, text) {
+            const e = document.createElement(tag);
+            if (cls) e.className = cls;
+            if (text != null) e.textContent = text;
+            return e;
+        }
+
+        function message(html) { app.innerHTML = '<div class="card center">' + html + "</div>"; }
+
+        const backend = await getBackend().catch(() => null);
+        if (!backend) {
+            message("<p>The guestbook isn&rsquo;t connected yet. Fill in <code>js/guestbook-config.js</code> first.</p>");
+        } else {
+            backend.onUser((user) => {
+                userBox.textContent = "";
+                if (!user) return showSignIn();
+                const who = el("span", "who", (user.displayName || "signed in") + "  ");
+                const out = el("button", "", "sign out");
+                out.onclick = () => backend.signOut();
+                userBox.append(who, out);
+                if (!backend.ownerId || user.uid !== backend.ownerId) {
+                    message('<p class="err">This account isn&rsquo;t set as the guestbook owner yet.</p>' +
+                        '<p>If this is you, your account ID is below. Paste it into <code>js/guestbook-config.js</code> (OWNER_ID) and into your Firestore rules.</p>');
+                    const code = el("code", "", user.uid);
+                    code.style.cssText = "display:block;margin:0 auto 14px;padding:10px;border-radius:10px;background:rgba(255,255,255,.07);user-select:all;word-break:break-all";
+                    const copy = el("button", "primary", "copy account ID");
+                    copy.onclick = () => { navigator.clipboard && navigator.clipboard.writeText(user.uid); copy.textContent = "copied \u2661"; };
+                    app.querySelector(".card").append(code, copy);
+                    return;
+                }
+                loadAll();
+            });
+        }
+
+        function showSignIn() {
+            message("<p>Sign in to approve or delete guestbook messages.</p>");
+            const btn = el("button", "primary", "sign in with Google");
+            btn.onclick = async () => {
+                btn.disabled = true;
+                try { await backend.signIn(); } catch (e) { btn.disabled = false; }
+            };
+            app.querySelector(".card").appendChild(btn);
+        }
+
+        function row(item, pending) {
+            const li = el("li");
+            const meta = el("div", "meta");
+            meta.append(el("span", "name", item.name), el("span", "", timeAgo(item.createdAt)));
+            const actions = el("div", "actions");
+            if (pending) {
+                const ok = el("button", "primary", "approve ♡");
+                ok.onclick = async () => {
+                    ok.disabled = true;
+                    try { await backend.approve(item.id); loadAll(); } catch (e) { ok.disabled = false; alertErr(); }
+                };
+                actions.append(ok);
+            }
+            const del = el("button", "danger", "delete");
+            del.onclick = async () => {
+                if (!confirm("Delete this message for good?")) return;
+                del.disabled = true;
+                try { await backend.remove(item.id); loadAll(); } catch (e) { del.disabled = false; alertErr(); }
+            };
+            actions.append(del);
+            li.append(meta, el("p", "msg", item.message), actions);
+            return li;
+        }
+
+        function alertErr() { message('<p class="err">Something went wrong. Check that firestore.rules has your email, then reload.</p>'); }
+
+        function section(title, items, pending) {
+            const frag = document.createDocumentFragment();
+            const h = el("h2", "", title + " ");
+            h.append(el("span", "n", "(" + items.length + ")"));
+            const ul = el("ul");
+            if (!items.length) ul.append(el("li", "empty", pending ? "nothing waiting — all caught up ♡" : "nothing here yet"));
+            items.forEach((it) => ul.append(row(it, pending)));
+            frag.append(h, ul);
+            return frag;
+        }
+
+        async function loadAll() {
+            try {
+                const [pending, approved] = await Promise.all([backend.listPending(), backend.listApproved()]);
+                app.textContent = "";
+                app.append(section("waiting for approval", pending, true), section("on the site", approved, false));
+            } catch (e) {
+                alertErr();
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,121 @@
+/* Guestbook panel on the main page */
+import { getBackend, timeAgo } from "./guestbook-backend.js?v=6";
+
+const openBtn = document.getElementById("gbOpen");
+const panel = document.getElementById("gb");
+const closeBtn = document.getElementById("gbClose");
+const list = document.getElementById("gbList");
+const form = document.getElementById("gbForm");
+const nameIn = document.getElementById("gbName");
+const msgIn = document.getElementById("gbMsg");
+const trap = document.getElementById("gbWebsite");
+const counter = document.getElementById("gbCount");
+const status = document.getElementById("gbStatus");
+const sendBtn = document.getElementById("gbSend");
+
+const COOLDOWN = 60 * 1000;
+const store = {
+  get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
+  set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+};
+
+let backend = null;
+let loaded = false;
+
+function setStatus(text, kind) {
+  status.textContent = text;
+  status.className = "gb__status" + (kind ? " gb__status--" + kind : "");
+}
+
+function render(items) {
+  list.textContent = "";
+  if (!items.length) {
+    const empty = document.createElement("li");
+    empty.className = "gb__empty";
+    empty.textContent = "no messages yet… be the first ♡";
+    list.appendChild(empty);
+    return;
+  }
+  for (const it of items) {
+    const li = document.createElement("li");
+    li.className = "gb__item";
+    const top = document.createElement("div");
+    top.className = "gb__meta";
+    const n = document.createElement("span");
+    n.className = "gb__name";
+    n.textContent = it.name;
+    const t = document.createElement("span");
+    t.className = "gb__time";
+    t.textContent = timeAgo(it.createdAt);
+    top.append(n, t);
+    const m = document.createElement("p");
+    m.className = "gb__msg";
+    m.textContent = it.message;
+    li.append(top, m);
+    list.appendChild(li);
+  }
+}
+
+async function load() {
+  list.innerHTML = '<li class="gb__empty">loading…</li>';
+  try {
+    render(await backend.listApproved());
+    loaded = true;
+  } catch (e) {
+    list.innerHTML = '<li class="gb__empty">couldn’t load messages right now</li>';
+  }
+}
+
+function open() {
+  panel.hidden = false;
+  requestAnimationFrame(() => panel.classList.add("is-open"));
+  document.body.classList.add("is-gb-open");
+  if (!loaded) load();
+  setTimeout(() => nameIn.focus({ preventScroll: true }), 250);
+}
+
+function close() {
+  panel.classList.remove("is-open");
+  document.body.classList.remove("is-gb-open");
+  setTimeout(() => { panel.hidden = true; }, 300);
+  openBtn.focus({ preventScroll: true });
+}
+
+msgIn.addEventListener("input", () => { counter.textContent = msgIn.value.length + "/280"; });
+
+form.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const name = nameIn.value.trim().replace(/\s+/g, " ");
+  const message = msgIn.value.trim();
+
+  if (trap.value) { setStatus("sent! ♡", "ok"); form.reset(); return; } // bots fill the hidden field
+  if (!name || !message) { setStatus("add a name and a message ♡", "err"); return; }
+
+  const last = parseInt(store.get("whoopsies-gb-last"), 10) || 0;
+  const wait = COOLDOWN - (Date.now() - last);
+  if (wait > 0) { setStatus("slow down a little — try again in " + Math.ceil(wait / 1000) + "s", "err"); return; }
+
+  sendBtn.disabled = true;
+  setStatus("sending…");
+  try {
+    await backend.submit(name.slice(0, 24), message.slice(0, 280));
+    store.set("whoopsies-gb-last", String(Date.now()));
+    form.reset();
+    counter.textContent = "0/280";
+    setStatus("sent! it’ll show up once it’s approved ♡", "ok");
+  } catch (err) {
+    setStatus("whoopsies, that didn’t send. try again in a bit", "err");
+  } finally {
+    sendBtn.disabled = false;
+  }
+});
+
+openBtn.addEventListener("click", open);
+closeBtn.addEventListener("click", close);
+panel.addEventListener("click", (e) => { if (e.target === panel) close(); });
+document.addEventListener("keydown", (e) => { if (e.key === "Escape" && !panel.hidden) close(); });
+
+(async () => {
+  try { backend = await getBackend(); } catch (e) { backend = null; }
+  if (backend) openBtn.hidden = false;
+})();

@@ -1,0 +1,39 @@
+rules_version = '2';
+
+// Paste this into Firebase console → Firestore Database → Rules, then click Publish.
+// Replace YOUR_ACCOUNT_ID with the account ID shown on whoopsies.win/admin after you sign in.
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isOwner() {
+      return request.auth != null && request.auth.uid == "YOUR_ACCOUNT_ID";
+    }
+
+    match /guestbook/{id} {
+      // Everyone can read approved messages; only you can see ones still waiting
+      allow read: if resource.data.approved == true || isOwner();
+
+      // Anyone can leave a message, but it always starts unapproved
+      allow create: if request.resource.data.keys().hasOnly(['name', 'message', 'approved', 'createdAt'])
+        && request.resource.data.approved == false
+        && request.resource.data.name is string
+        && request.resource.data.name.size() > 0
+        && request.resource.data.name.size() <= 24
+        && request.resource.data.message is string
+        && request.resource.data.message.size() > 0
+        && request.resource.data.message.size() <= 280
+        && request.resource.data.createdAt == request.time;
+
+      // Only you can approve or delete
+      allow update: if isOwner()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['approved']);
+      allow delete: if isOwner();
+    }
+
+    // Nothing else in the database is readable or writable
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
