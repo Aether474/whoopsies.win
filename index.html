@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>@.envy</title>
+    <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <link rel="stylesheet" href="css/normalize.min.css">
+    
+    <!-- Normal Open Graph (for everywhere except Discord) -->
+    <meta property="og:title" content="@.envy" />
+    <meta property="og:description" content="envy is just envy," />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="@.envy" />
+    
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="@.envy">
+    <meta name="twitter:description" content="envy is just envy,">
+
+    <!-- DISCORD-SPECIFIC KILL SWITCH -->
+    <meta property="discord:card" content="none">
+    <meta property="discord:embed" content="none">
+    <meta name="discord:card" content="none">
+    <meta name="discord:embed" content="none">
+
+    <meta name="theme-color" content="#000000">
+    <meta name="description" content="envy is just envy">
+    <meta name="author" content="@.envy">
+
+    <link rel="stylesheet" href="css/style.css">
+    <script src="js/browser.js"></script>
+    <link rel="stylesheet" href="css/all.min.css">
+    <script type="module" src="js/cursoreffect.js"></script>
+
+    <style>
+        .envy-name {
+            font-weight: 800;
+            font-size: 39.5px;
+            background: linear-gradient(
+                90deg,
+                #ffccd5 0%,      /* very light pink */
+                #ff9ab5 25%,     /* light-medium pink */
+                #ff6699 50%,     /* stronger / hot pink-ish */
+                #e066a3 75%,     /* deeper pink */
+                #f0f0ff 100%     /* darkish white / very light lavender-white */
+            );
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-size: 200% 200%;
+            animation: softPinkFlow 12s ease infinite;
+            text-shadow: 0 0 15px rgba(255, 182, 193, 0.6);
+            letter-spacing: 1px;
+        }
+
+        @keyframes softPinkFlow {
+            0%   { background-position: 0% 50%; }
+            50%  { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .viewholder {
+            position: absolute;
+            bottom: 18px;
+            left: 20px;
+            font-size: 15px;
+            font-weight: 600;
+            color: #fff;
+            text-shadow: 0 0 8px #000;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .viewholder i { font-size: 18px; }
+
+        /* Gentle fade-out for the original intro overlay */
+        #test.fade-out {
+            opacity: 0;
+            filter: blur(12px);
+            transform: scale(0.96);
+            transition: 
+                opacity 4.8s ease-out,
+                filter 4.8s ease-out,
+                transform 4.8s ease-out;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- VIDEO BACKGROUND – always visible underneath -->
+    <div class="backgroundvid">
+        <video autoplay muted loop playsinline id="bgVideo">
+            <source src="images/3e31c497-5b11-41db-950f-e84c7afdc59e.mp4" type="video/mp4">
+            Your browser does not support the video tag.
+        </video>
+    </div>
+
+    <!-- Original intro/load screen – kept exactly as you had it -->
+    <div class="test" id="test">
+        <div class="term skid" id="thingtofade">
+            <span class="nothover">manipulation is life</span>
+            <span class="hover">
+                <a id="clickythingy">manipulation is life</a>
+            </span>
+        </div>
+    </div>
+
+    <script src="js/clickme.js"></script>
+
+    <audio id="audio" loop preload="auto"></audio>
+
+    <div class="wrapper">
+        <div class="profile-card js-profile-card" style="position:relative;">
+            <div class="profile-card__img">
+                <img src="images/pfp test.jpg" alt="" id="pfp">
+            </div>
+
+            <div class="profile-card__cnt js-profile-cnt" style="text-align:center;">
+                <div class="envy-name">.envy</div>
+                <div style="margin:20px 0 50px; font-size:18px; color:#fff; text-shadow:0 0 8px #000;">
+                    envy is just envy,
+                </div>
+            </div>
+
+            <div class="viewholder">
+                <i class="fas fa-eye"></i>
+                <span>who needs that????</span>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/clipboard.js"></script>
+    <script src="js/jquery.min.js"></script>
+    <script src="js/audio.js"></script>
+
+    <script>
+        // Fade out the original intro after short delay
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                const intro = document.getElementById('test');
+                if (intro) {
+                    intro.classList.add('fade-out');
+                }
+            }, 2800); // 2.8 seconds visible – adjust if needed
+
+            // Initialize audio properly
+            const audio = document.getElementById('audio');
+            if (audio) {
+                // Make sure it starts with the correct track
+                audio.src = 'media/okay.mp3';
+                audio.load();
+
+                // Attempt to play (small delay helps with some browsers)
+                setTimeout(() => {
+                    audio.play().catch(e => console.log("Autoplay blocked:", e));
+                }, 1000);
+            }
+        });
+
+        // Use this function anywhere you change the audio source
+        function changeAudio(newSrc) {
+            const audio = document.getElementById('audio');
+            if (!audio) return;
+
+            audio.pause();
+            audio.currentTime = 0;
+            audio.src = newSrc;
+            audio.load();
+
+            // Play when ready
+            audio.addEventListener('canplay', () => {
+                audio.play().catch(e => console.log("Play failed:", e));
+            }, { once: true });
+        }
+
+        // Example: changeAudio('media/new-song.mp3');
+    </script>
+
+</body>
+</html>
