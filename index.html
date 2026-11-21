@@ -2,179 +2,75 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>@.envy</title>
-    <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
-    <link rel="stylesheet" href="css/normalize.min.css">
-    
-    <!-- Normal Open Graph (for everywhere except Discord) -->
-    <meta property="og:title" content="@.envy" />
-    <meta property="og:description" content="envy is just envy," />
-    <meta property="og:type" content="website" />
-    <meta property="og:site_name" content="@.envy" />
-    
-    <meta name="twitter:card" content="summary_large_image">
+    <meta name="description" content="envy is just envy,">
+    <meta name="author" content="@.envy">
+    <meta name="theme-color" content="#14080d">
+
+    <meta property="og:title" content="@.envy">
+    <meta property="og:description" content="envy is just envy,">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://whoopsies.win/">
+    <meta property="og:site_name" content="whoopsies.win">
+    <meta name="twitter:card" content="summary">
     <meta name="twitter:title" content="@.envy">
     <meta name="twitter:description" content="envy is just envy,">
 
-    <!-- DISCORD-SPECIFIC KILL SWITCH -->
-    <meta property="discord:card" content="none">
-    <meta property="discord:embed" content="none">
-    <meta name="discord:card" content="none">
-    <meta name="discord:embed" content="none">
+    <link rel="icon" type="image/jpeg" href="images/pfp.jpg">
+    <link rel="apple-touch-icon" href="images/pfp.jpg">
 
-    <meta name="theme-color" content="#000000">
-    <meta name="description" content="envy is just envy">
-    <meta name="author" content="@.envy">
-
+    <link rel="preconnect" href="https://api.fontshare.com" crossorigin>
+    <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700,900&display=swap">
     <link rel="stylesheet" href="css/style.css">
-    <script src="js/browser.js"></script>
-    <link rel="stylesheet" href="css/all.min.css">
-    <script type="module" src="js/cursoreffect.js"></script>
-
-    <style>
-        .envy-name {
-            font-weight: 800;
-            font-size: 39.5px;
-            background: linear-gradient(
-                90deg,
-                #ffccd5 0%,      /* very light pink */
-                #ff9ab5 25%,     /* light-medium pink */
-                #ff6699 50%,     /* stronger / hot pink-ish */
-                #e066a3 75%,     /* deeper pink */
-                #f0f0ff 100%     /* darkish white / very light lavender-white */
-            );
-            -webkit-background-clip: text;
-            background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-size: 200% 200%;
-            animation: softPinkFlow 12s ease infinite;
-            text-shadow: 0 0 15px rgba(255, 182, 193, 0.6);
-            letter-spacing: 1px;
-        }
-
-        @keyframes softPinkFlow {
-            0%   { background-position: 0% 50%; }
-            50%  { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-        }
-
-        .viewholder {
-            position: absolute;
-            bottom: 18px;
-            left: 20px;
-            font-size: 15px;
-            font-weight: 600;
-            color: #fff;
-            text-shadow: 0 0 8px #000;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-        .viewholder i { font-size: 18px; }
-
-        /* Gentle fade-out for the original intro overlay */
-        #test.fade-out {
-            opacity: 0;
-            filter: blur(12px);
-            transform: scale(0.96);
-            transition: 
-                opacity 4.8s ease-out,
-                filter 4.8s ease-out,
-                transform 4.8s ease-out;
-            pointer-events: none;
-        }
-    </style>
 </head>
-<body>
+<body class="is-locked">
 
-    <!-- VIDEO BACKGROUND – always visible underneath -->
-    <div class="backgroundvid">
-        <video autoplay muted loop playsinline id="bgVideo">
-            <source src="images/3e31c497-5b11-41db-950f-e84c7afdc59e.mp4" type="video/mp4">
-            Your browser does not support the video tag.
+    <!-- Background video -->
+    <div class="bg" aria-hidden="true">
+        <video id="bgVideo" autoplay muted loop playsinline preload="auto" poster="images/bg-poster.jpg">
+            <source src="images/bg.mp4" type="video/mp4">
         </video>
+        <div class="bg__shade"></div>
     </div>
 
-    <!-- Original intro/load screen – kept exactly as you had it -->
-    <div class="test" id="test">
-        <div class="term skid" id="thingtofade">
-            <span class="nothover">manipulation is life</span>
-            <span class="hover">
-                <a id="clickythingy">manipulation is life</a>
-            </span>
+    <!-- Click-to-enter intro -->
+    <div class="intro" id="intro" role="button" tabindex="0" aria-label="Enter site">
+        <div class="intro__inner">
+            <div class="intro__title">whoopsies<span class="intro__heart">&#9825;</span></div>
+            <div class="intro__hint"><span class="hint-desktop">click</span><span class="hint-touch">tap</span> anywhere to enter</div>
         </div>
     </div>
 
-    <script src="js/clickme.js"></script>
-
-    <audio id="audio" loop preload="auto"></audio>
-
-    <div class="wrapper">
-        <div class="profile-card js-profile-card" style="position:relative;">
-            <div class="profile-card__img">
-                <img src="images/pfp test.jpg" alt="" id="pfp">
+    <!-- Profile -->
+    <main class="stage">
+        <article class="card" id="card">
+            <div class="card__avatar">
+                <img src="images/pfp.jpg" alt="profile picture" width="236" height="236">
             </div>
 
-            <div class="profile-card__cnt js-profile-cnt" style="text-align:center;">
-                <div class="envy-name">.envy</div>
-                <div style="margin:20px 0 50px; font-size:18px; color:#fff; text-shadow:0 0 8px #000;">
-                    envy is just envy,
-                </div>
-            </div>
+            <h1 class="card__name"><span class="card__name-text">.envy</span></h1>
+            <p class="card__bio">envy is just envy,</p>
 
-            <div class="viewholder">
-                <i class="fas fa-eye"></i>
-                <span>who needs that????</span>
-            </div>
-        </div>
-    </div>
+            <footer class="card__footer">
+                <span class="card__views">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.6-6.5 10-6.5S22 12 22 12s-3.6 6.5-10 6.5S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg>
+                    who needs that????
+                </span>
+            </footer>
+        </article>
+    </main>
 
-    <script src="js/clipboard.js"></script>
-    <script src="js/jquery.min.js"></script>
-    <script src="js/audio.js"></script>
+    <!-- Music toggle -->
+    <button class="music" id="musicBtn" type="button" aria-label="Mute music" aria-pressed="false">
+        <svg class="music__on" viewBox="0 0 24 24" aria-hidden="true"><path class="fill" d="M4 9.2h3.2L12 5.4v13.2l-4.8-3.8H4z"/><path d="M15.5 9.2a4 4 0 0 1 0 5.6M18.2 6.6a7.6 7.6 0 0 1 0 10.8"/></svg>
+        <svg class="music__off" viewBox="0 0 24 24" aria-hidden="true"><path class="fill" d="M4 9.2h3.2L12 5.4v13.2l-4.8-3.8H4z"/><path d="M16 9.5l5 5M21 9.5l-5 5"/></svg>
+        <span class="music__label">okay</span>
+    </button>
 
-    <script>
-        // Fade out the original intro after short delay
-        window.addEventListener('load', () => {
-            setTimeout(() => {
-                const intro = document.getElementById('test');
-                if (intro) {
-                    intro.classList.add('fade-out');
-                }
-            }, 2800); // 2.8 seconds visible – adjust if needed
+    <audio id="audio" src="media/okay.mp3" loop preload="auto"></audio>
 
-            // Initialize audio properly
-            const audio = document.getElementById('audio');
-            if (audio) {
-                // Make sure it starts with the correct track
-                audio.src = 'media/okay.mp3';
-                audio.load();
-
-                // Attempt to play (small delay helps with some browsers)
-                setTimeout(() => {
-                    audio.play().catch(e => console.log("Autoplay blocked:", e));
-                }, 1000);
-            }
-        });
-
-        // Use this function anywhere you change the audio source
-        function changeAudio(newSrc) {
-            const audio = document.getElementById('audio');
-            if (!audio) return;
-
-            audio.pause();
-            audio.currentTime = 0;
-            audio.src = newSrc;
-            audio.load();
-
-            // Play when ready
-            audio.addEventListener('canplay', () => {
-                audio.play().catch(e => console.log("Play failed:", e));
-            }, { once: true });
-        }
-
-        // Example: changeAudio('media/new-song.mp3');
-    </script>
-
+    <script src="js/cursor-effects.min.js" defer></script>
+    <script src="js/main.js" defer></script>
 </body>
 </html>
