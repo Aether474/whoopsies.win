@@ -15,5 +15,5 @@ window.WHOOPSIES_GUESTBOOK = {
     messagingSenderId: "406245013768",
     appId: "1:406245013768:web:00c413e0e2dd9b7a63d4bd"
   },
-  OWNER_ID: ""
+  OWNER_ID: "zCNto0PmpuTm40gsxMg0xE2FWs83"
 };
