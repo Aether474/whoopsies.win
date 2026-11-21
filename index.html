@@ -17,19 +17,19 @@
     <meta name="twitter:title" content="@.envy">
     <meta name="twitter:description" content="envy is just envy,">
 
-    <link rel="icon" type="image/jpeg" href="images/pfp.jpg?v=3">
-    <link rel="apple-touch-icon" href="images/pfp.jpg?v=3">
+    <link rel="icon" type="image/jpeg" href="images/pfp.jpg?v=4">
+    <link rel="apple-touch-icon" href="images/pfp.jpg?v=4">
 
     <link rel="preconnect" href="https://api.fontshare.com" crossorigin>
     <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700,900&display=swap">
-    <link rel="stylesheet" href="css/style.css?v=3">
+    <link rel="stylesheet" href="css/style.css?v=4">
 </head>
 <body class="is-locked">
 
     <!-- Background video -->
     <div class="bg" aria-hidden="true">
-        <video id="bgVideo" autoplay muted loop playsinline preload="auto" poster="images/bg-poster.jpg?v=3">
-            <source src="images/bg.mp4?v=3" type="video/mp4">
+        <video id="bgVideo" autoplay muted loop playsinline preload="auto" poster="images/bg-poster.jpg?v=4">
+            <source src="images/bg.mp4?v=4" type="video/mp4">
         </video>
         <div class="bg__shade"></div>
     </div>
@@ -45,32 +45,71 @@
     <!-- Profile -->
     <main class="stage">
         <article class="card" id="card">
-            <div class="card__avatar">
-                <img src="images/pfp.jpg?v=3" alt="profile picture" width="489" height="489">
-            </div>
+            <button class="card__avatar" id="avatar" type="button" aria-label="profile picture">
+                <img src="images/pfp.jpg?v=4" alt="" width="489" height="489">
+            </button>
 
             <h1 class="card__name"><span class="card__name-text">.envy</span></h1>
-            <p class="card__bio">envy is just envy,</p>
+
+            <ul class="badges" aria-label="badges">
+                <li class="badge" tabindex="0" data-tip="whoopsies certified">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path class="fill" d="M12 20.3s-7.8-4.6-7.8-10.2A4.4 4.4 0 0 1 12 7.4a4.4 4.4 0 0 1 7.8 2.7c0 5.6-7.8 10.2-7.8 10.2Z"/></svg>
+                    <span class="sr-only">whoopsies certified</span>
+                </li>
+                <li class="badge" tabindex="0" data-tip="sleepy">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path class="fill" d="M20 14.6A8 8 0 0 1 9.4 4a8 8 0 1 0 10.6 10.6Z"/></svg>
+                    <span class="sr-only">sleepy</span>
+                </li>
+                <li class="badge" tabindex="0" data-tip="sparkly">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path class="fill" d="M12 2.5c.6 4.6 2.9 6.9 7.5 7.5-4.6.6-6.9 2.9-7.5 7.5-.6-4.6-2.9-6.9-7.5-7.5 4.6-.6 6.9-2.9 7.5-7.5Zm6.5 12.5c.3 2 1.2 3 3 3.3-1.8.3-2.7 1.2-3 3.2-.3-2-1.2-2.9-3-3.2 1.8-.3 2.7-1.3 3-3.3Z"/></svg>
+                    <span class="sr-only">sparkly</span>
+                </li>
+                <li class="badge" tabindex="0" data-tip="music lover">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path class="fill" d="M9 17.5V6.2l11-2.2v11.3a2.8 2.8 0 1 1-2-2.7V7.4l-7 1.4v8.7a2.8 2.8 0 1 1-2-2.7Z"/></svg>
+                    <span class="sr-only">music lover</span>
+                </li>
+            </ul>
+
+            <p class="card__bio" aria-live="polite"><span class="typed" id="typed"></span><span class="caret" aria-hidden="true"></span></p>
 
             <footer class="card__footer">
-                <span class="card__views">
+                <span class="card__views" title="views">
                     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.6-6.5 10-6.5S22 12 22 12s-3.6 6.5-10 6.5S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg>
-                    who needs that????
+                    <span id="views">&hellip;</span>
                 </span>
+                <span class="card__hint" aria-hidden="true">psst&hellip; there are secrets here</span>
             </footer>
         </article>
     </main>
 
-    <!-- Music toggle -->
-    <button class="music" id="musicBtn" type="button" aria-label="Mute music" aria-pressed="false">
-        <svg class="music__on" viewBox="0 0 24 24" aria-hidden="true"><path class="fill" d="M4 9.2h3.2L12 5.4v13.2l-4.8-3.8H4z"/><path d="M15.5 9.2a4 4 0 0 1 0 5.6M18.2 6.6a7.6 7.6 0 0 1 0 10.8"/></svg>
-        <svg class="music__off" viewBox="0 0 24 24" aria-hidden="true"><path class="fill" d="M4 9.2h3.2L12 5.4v13.2l-4.8-3.8H4z"/><path d="M16 9.5l5 5M21 9.5l-5 5"/></svg>
-        <span class="music__label">sakura zxc</span>
-    </button>
+    <!-- Music player -->
+    <div class="player" id="player">
+        <button class="player__btn" id="playBtn" type="button" aria-label="Pause music">
+            <svg class="i-pause" viewBox="0 0 24 24" aria-hidden="true"><path class="fill" d="M7 5h3.5v14H7zM13.5 5H17v14h-3.5z"/></svg>
+            <svg class="i-play" viewBox="0 0 24 24" aria-hidden="true"><path class="fill" d="M8 5.2v13.6a.8.8 0 0 0 1.2.7l10.6-6.8a.8.8 0 0 0 0-1.4L9.2 4.5A.8.8 0 0 0 8 5.2Z"/></svg>
+        </button>
+        <div class="player__info">
+            <div class="player__title"><span class="player__note">&#9834;</span> sakura zxc</div>
+            <div class="player__bar" id="seek" role="slider" tabindex="0" aria-label="Song position" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+                <div class="player__fill" id="seekFill"></div>
+            </div>
+            <div class="player__time"><span id="tCur">0:00</span><span id="tDur">0:00</span></div>
+        </div>
+        <div class="player__vol">
+            <button class="player__btn player__btn--small" id="muteBtn" type="button" aria-label="Mute">
+                <svg class="i-vol" viewBox="0 0 24 24" aria-hidden="true"><path class="fill" d="M4 9.2h3.2L12 5.4v13.2l-4.8-3.8H4z"/><path d="M15.5 9.2a4 4 0 0 1 0 5.6M18.2 6.6a7.6 7.6 0 0 1 0 10.8"/></svg>
+                <svg class="i-mute" viewBox="0 0 24 24" aria-hidden="true"><path class="fill" d="M4 9.2h3.2L12 5.4v13.2l-4.8-3.8H4z"/><path d="M16 9.5l5 5M21 9.5l-5 5"/></svg>
+            </button>
+            <input class="player__range" id="vol" type="range" min="0" max="1" step="0.01" value="0.45" aria-label="Volume">
+        </div>
+    </div>
 
-    <audio id="audio" src="media/sakura.mp3?v=3" loop preload="auto"></audio>
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    <div class="fx" id="fx" aria-hidden="true"></div>
 
-    <script src="js/cursor-effects.min.js?v=3" defer></script>
-    <script src="js/main.js?v=3" defer></script>
+    <audio id="audio" src="media/sakura.mp3?v=4" loop preload="auto"></audio>
+
+    <script src="js/cursor-effects.min.js?v=4" defer></script>
+    <script src="js/main.js?v=4" defer></script>
 </body>
 </html>
