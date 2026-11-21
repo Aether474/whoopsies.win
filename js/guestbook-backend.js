@@ -56,7 +56,7 @@ export async function getBackend() {
     async remove(id) { await fs.deleteDoc(fs.doc(db, "guestbook", id)); },
 
     onUser(cb) { return auth.onAuthStateChanged(au, cb); },
-    async signIn() { await auth.signInWithPopup(au, new auth.GoogleAuthProvider()); },
+    async signIn(email, password) { await auth.signInWithEmailAndPassword(au, email, password); },
     async signOut() { await auth.signOut(au); }
   };
   return cached;

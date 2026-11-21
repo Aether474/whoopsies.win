@@ -68,6 +68,20 @@
         .actions { display: flex; gap: 8px; }
         .empty { padding: 14px; text-align: center; font-size: 13px; color: var(--muted); background: transparent; border: 1px dashed var(--edge); }
         .err { color: #ffb0b0; }
+        .login { display: grid; gap: 10px; max-width: 300px; margin: 0 auto; }
+        .login input {
+            padding: 11px 13px;
+            font: 500 14px/1.3 inherit;
+            font-family: inherit;
+            color: #fff;
+            background: rgba(255, 255, 255, 0.07);
+            border: 1px solid var(--edge);
+            border-radius: 12px;
+            outline: none;
+        }
+        .login input:focus { border-color: var(--pink-2); }
+        .login button { padding: 11px; }
+        .login .err { margin: 0; font-size: 13px; }
         a { color: var(--pink-2); }
     </style>
 </head>
@@ -103,7 +117,7 @@
             backend.onUser((user) => {
                 userBox.textContent = "";
                 if (!user) return showSignIn();
-                const who = el("span", "who", (user.displayName || "signed in") + "  ");
+                const who = el("span", "who", "signed in  ");
                 const out = el("button", "", "sign out");
                 out.onclick = () => backend.signOut();
                 userBox.append(who, out);
@@ -123,12 +137,20 @@
 
         function showSignIn() {
             message("<p>Sign in to approve or delete guestbook messages.</p>");
-            const btn = el("button", "primary", "sign in with Google");
-            btn.onclick = async () => {
-                btn.disabled = true;
-                try { await backend.signIn(); } catch (e) { btn.disabled = false; }
+            const form = el("form", "login");
+            const email = el("input"); email.type = "email"; email.placeholder = "email"; email.autocomplete = "username"; email.required = true;
+            const pass = el("input"); pass.type = "password"; pass.placeholder = "password"; pass.autocomplete = "current-password"; pass.required = true;
+            const btn = el("button", "primary", "sign in"); btn.type = "submit";
+            const err = el("p", "err"); err.style.minHeight = "1.2em";
+            form.append(email, pass, btn, err);
+            form.onsubmit = async (e) => {
+                e.preventDefault();
+                btn.disabled = true; err.textContent = "";
+                try { await backend.signIn(email.value.trim(), pass.value); }
+                catch (x) { err.textContent = "That email or password didn\u2019t work."; btn.disabled = false; }
             };
-            app.querySelector(".card").appendChild(btn);
+            app.querySelector(".card").appendChild(form);
+            email.focus();
         }
 
         function row(item, pending) {
