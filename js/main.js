@@ -199,7 +199,7 @@
 
   /* ═════════════ typing bio ═════════════ */
   var phrases = [
-    "envy is just envy,",
+    "just a person, probably",
     "KITTYYYYYY",
     "what the flip flop man",
     "tired",
