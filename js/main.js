@@ -13,6 +13,9 @@
 
   var entered = false;
 
+  // Put your Discord user ID here (and join discord.gg/lanyard) to show live status
+  var DISCORD_ID = "";
+
   function store(key, val) {
     try {
       if (val === undefined) return localStorage.getItem(key);
@@ -129,6 +132,40 @@
     else if (!document.hidden && pausedByHide) { pausedByHide = false; tryPlay(); }
   });
 
+  /* ═════════════ loading screen ═════════════ */
+  (function () {
+    var fillEl = $("loadFill"), txt = $("loadTxt");
+    var done = false, start = Date.now();
+
+    function frac(m) {
+      try {
+        if (m.readyState >= 4) return 1;
+        if (!m.duration || !m.buffered.length) return m.readyState >= 2 ? 0.5 : 0;
+        return Math.min(1, m.buffered.end(m.buffered.length - 1) / m.duration);
+      } catch (e) { return 0; }
+    }
+
+    function ready() {
+      if (done) return;
+      done = true;
+      fillEl.style.width = "100%";
+      setTimeout(function () { intro.classList.remove("is-loading"); }, 250);
+    }
+
+    function tick() {
+      if (done) return;
+      var v = video ? frac(video) : 1, a = frac(audio);
+      var pct = Math.max(8, Math.round(((v + a) / 2) * 100));
+      fillEl.style.width = pct + "%";
+      var vOk = !video || video.readyState >= 3, aOk = audio.readyState >= 3;
+      if (vOk && aOk) return ready();
+      if (Date.now() - start > 8000) { txt.textContent = "almost there\u2026"; }
+      if (Date.now() - start > 12000) return ready(); // don't keep anyone waiting forever
+      setTimeout(tick, 150);
+    }
+    tick();
+  })();
+
   /* ═════════════ click to enter ═════════════ */
   function enter() {
     if (entered) return;
@@ -151,6 +188,7 @@
     body.classList.add("is-entered");
     setTimeout(function () { body.classList.add("is-ready"); }, 1400);
     setTimeout(startTyping, 900);
+    setTimeout(startHints, 4000);
     syncPlayer();
   }
 
@@ -294,7 +332,66 @@
     }
   }
 
-  /* ═════════════ easter eggs ═════════════ */
+  /* ═════════════ secrets ═════════════ */
+  var SECRETS = {
+    boop:   "my picture likes boops\u2026 lots of them",
+    word:   "there's a magic word. it's on the intro screen",
+    konami: "gamers know a code \u2191\u2191\u2193\u2193\u2026",
+    stars:  "the moon gets sleepy if you hold it"
+  };
+  var secretIds = Object.keys(SECRETS);
+  var found = {};
+  try { found = JSON.parse(store("whoopsies-secrets") || "{}") || {}; } catch (e) { found = {}; }
+  var countEl = $("secretCount"), hintText = $("hintText");
+
+  function foundCount() {
+    return secretIds.filter(function (k) { return found[k]; }).length;
+  }
+
+  function renderCount() {
+    var n = foundCount();
+    countEl.textContent = n + "/" + secretIds.length;
+    countEl.classList.toggle("is-done", n === secretIds.length);
+  }
+  renderCount();
+
+  function markFound(id, msg) {
+    var isNew = !found[id];
+    found[id] = true;
+    store("whoopsies-secrets", JSON.stringify(found));
+    renderCount();
+    var n = foundCount();
+    if (isNew) {
+      toast(msg + "  \u00b7  " + n + "/" + secretIds.length + " secrets");
+      if (n === secretIds.length) setTimeout(function () { toast("you found every secret \u2661 ily"); heartRain(70); }, 2900);
+    } else {
+      toast(msg);
+    }
+  }
+
+  function startHints() {
+    var i = 0;
+    function next() {
+      var left = secretIds.filter(function (k) { return !found[k]; });
+      var text = left.length ? SECRETS[left[i % left.length]] : "you found every secret \u2661";
+      i++;
+      if (hintText.textContent === text) return;
+      hintText.classList.add("is-swapping");
+      setTimeout(function () {
+        hintText.textContent = text;
+        hintText.parentNode.setAttribute("title", text);
+        hintText.classList.remove("is-swapping");
+      }, 350);
+    }
+    next();
+    setInterval(next, 7000);
+  }
+
+  if (window.console && console.log) {
+    console.log("%cwhoopsies \u2661", "color:#ff6699;font-size:20px;font-weight:900");
+    console.log("%cpeeking at the code? try \u2191 \u2191 \u2193 \u2193 \u2190 \u2192 \u2190 \u2192 B A", "color:#ff9ab5");
+  }
+
 
   // 1) click the profile picture 5 times quickly
   var avatar = $("avatar"), clicks = 0, clickTimer = null;
@@ -309,12 +406,30 @@
       void avatar.offsetWidth;
       avatar.classList.add("is-spinning");
       heartBurst(r.left + r.width / 2, r.top + r.height / 2, 18);
-      toast("whoopsies! ♡ you found one");
+      markFound("boop", "boop! \u2661");
     } else {
       heartBurst(r.left + r.width / 2, r.top + r.height / 2, 3);
     }
   });
   avatar.addEventListener("animationend", function () { avatar.classList.remove("is-spinning"); });
+
+  // 4) hold the moon badge
+  var moon = $("moonBadge"), holdTimer = null;
+  function holdStart(e) {
+    if (e.button && e.button !== 0) return;
+    moon.classList.add("is-holding");
+    holdTimer = setTimeout(function () {
+      moon.classList.remove("is-holding");
+      if (window.whoopsiesWeather) window.whoopsiesWeather.shootingStars(16);
+      markFound("stars", "make a wish \u2727");
+    }, 1000);
+  }
+  function holdEnd() { clearTimeout(holdTimer); moon.classList.remove("is-holding"); }
+  moon.addEventListener("pointerdown", holdStart);
+  moon.addEventListener("pointerup", holdEnd);
+  moon.addEventListener("pointerleave", holdEnd);
+  moon.addEventListener("pointercancel", holdEnd);
+  moon.addEventListener("contextmenu", function (e) { e.preventDefault(); });
 
   // 2) type "whoopsies" anywhere
   // 3) konami code toggles sleepy mode
@@ -334,7 +449,7 @@
       if (typedBuf.slice(-9) === "whoopsies") {
         typedBuf = "";
         heartRain(45);
-        toast("you said the magic word ♡");
+        markFound("word", "you said the magic word \u2661");
       }
     }
 
@@ -344,16 +459,79 @@
       var sleepy = body.classList.toggle("is-sleepy");
       audio.playbackRate = sleepy ? 0.85 : 1;
       if ("preservesPitch" in audio) audio.preservesPitch = false;
-      toast(sleepy ? "sleepy mode... zzz ☾" : "good morning ☀");
+      if (sleepy) markFound("konami", "sleepy mode\u2026 zzz \u263E");
+      else toast("good morning \u2600");
     }
   });
 
-  /* ═════════════ fairy dust cursor (desktop) ═════════════ */
-  if (finePointer && window.cursoreffects && window.cursoreffects.fairyDustCursor) {
-    new window.cursoreffects.fairyDustCursor({
-      colors: ["#ffccd5", "#ff9ab5", "#ff6699", "#e066a3", "#f0f0ff"]
-    });
-  }
+  /* ═════════════ discord live status (Lanyard) ═════════════ */
+  (function () {
+    if (!DISCORD_ID) return;
+    var dot = $("status"), box = $("activity"), art = $("activityArt");
+    var kindEl = $("activityKind"), nameEl = $("activityName");
+    var LABELS = { online: "online", idle: "idle", dnd: "do not disturb", offline: "offline" };
+    var hb = null, retry = 1000;
+
+    function setArt(url) {
+      if (url) { art.src = url; art.hidden = false; } else { art.removeAttribute("src"); art.hidden = true; }
+    }
+
+    function render(d) {
+      var st = d.discord_status || "offline";
+      dot.hidden = false;
+      dot.className = "status status--" + st;
+      dot.setAttribute("data-tip", LABELS[st] || st);
+      dot.setAttribute("title", LABELS[st] || st);
+
+      var acts = d.activities || [];
+      var game = acts.filter(function (a) { return a.type === 0; })[0];
+      var custom = acts.filter(function (a) { return a.type === 4 && a.state; })[0];
+
+      if (d.listening_to_spotify && d.spotify) {
+        kindEl.textContent = "listening to spotify";
+        nameEl.textContent = d.spotify.song + " — " + d.spotify.artist;
+        setArt(d.spotify.album_art_url);
+        box.hidden = false;
+      } else if (game) {
+        kindEl.textContent = "playing";
+        nameEl.textContent = game.name + (game.details ? " · " + game.details : "");
+        var img = game.assets && game.assets.large_image;
+        if (img && img.indexOf("mp:external/") === 0) setArt("https://media.discordapp.net/external/" + img.slice(12));
+        else if (img && game.application_id && img.indexOf("mp:") !== 0) setArt("https://cdn.discordapp.com/app-assets/" + game.application_id + "/" + img + ".png");
+        else setArt(null);
+        box.hidden = false;
+      } else if (custom) {
+        kindEl.textContent = "status";
+        nameEl.textContent = (custom.emoji && custom.emoji.name && !custom.emoji.id ? custom.emoji.name + " " : "") + custom.state;
+        setArt(null);
+        box.hidden = false;
+      } else {
+        box.hidden = true;
+      }
+    }
+
+    function connect() {
+      var ws;
+      try { ws = new WebSocket("wss://api.lanyard.rest/socket"); } catch (e) { return; }
+      ws.onmessage = function (e) {
+        var msg; try { msg = JSON.parse(e.data); } catch (x) { return; }
+        if (msg.op === 1) {
+          clearInterval(hb);
+          hb = setInterval(function () { if (ws.readyState === 1) ws.send(JSON.stringify({ op: 3 })); }, msg.d.heartbeat_interval);
+          ws.send(JSON.stringify({ op: 2, d: { subscribe_to_id: DISCORD_ID } }));
+        } else if (msg.op === 0 && msg.d) {
+          retry = 1000;
+          render(msg.d);
+        }
+      };
+      ws.onclose = function () {
+        clearInterval(hb);
+        setTimeout(connect, retry);
+        retry = Math.min(retry * 2, 30000);
+      };
+    }
+    connect();
+  })();
 
   syncPlayer();
 })();

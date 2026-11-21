@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>whoopsies! · page not found</title>
+    <meta name="robots" content="noindex">
+    <meta name="theme-color" content="#14080d">
+    <link rel="icon" type="image/jpeg" href="/images/pfp.jpg?v=5">
+    <link rel="preconnect" href="https://api.fontshare.com" crossorigin>
+    <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700,900&display=swap">
+    <style>
+        :root {
+            --pink-1: #ffccd5; --pink-2: #ff9ab5; --pink-3: #ff6699; --pink-4: #e066a3; --lavender: #f0f0ff;
+            --muted: rgba(255, 236, 242, 0.78);
+            --cursor: url("/images/cursor/paw-normal.png") 7 5, auto;
+            --pointer: url("/images/cursor/paw-pointer.png") 7 5, pointer;
+        }
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        html, body { height: 100%; }
+        body {
+            display: grid;
+            place-items: center;
+            padding: 24px;
+            font-family: "Satoshi", system-ui, -apple-system, "Segoe UI", sans-serif;
+            color: #fff;
+            text-align: center;
+            cursor: var(--cursor);
+            background: #14080d url("/images/bg-poster.jpg?v=5") center / cover no-repeat fixed;
+            -webkit-font-smoothing: antialiased;
+            overflow: hidden;
+        }
+        body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            background: rgba(10, 4, 8, 0.55);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+        }
+        .box { position: relative; z-index: 1; }
+        .paws { display: flex; justify-content: center; gap: 14px; margin-bottom: 18px; }
+        .paws span {
+            width: 26px; height: 26px;
+            background: url("/images/cursor/paw-normal.png") center / contain no-repeat;
+            opacity: .25;
+            animation: step 2.4s ease-in-out infinite;
+        }
+        .paws span:nth-child(2) { animation-delay: .3s; transform: translateY(-8px) rotate(12deg); }
+        .paws span:nth-child(3) { animation-delay: .6s; transform: rotate(-6deg); }
+        .paws span:nth-child(4) { animation-delay: .9s; transform: translateY(-8px) rotate(14deg); }
+        .code {
+            font-size: clamp(64px, 18vw, 140px);
+            font-weight: 900;
+            line-height: 1;
+            letter-spacing: 2px;
+            background: linear-gradient(90deg, var(--pink-1), var(--pink-2), var(--pink-3), var(--pink-4), var(--lavender), var(--pink-1));
+            background-size: 300% 100%;
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            filter: drop-shadow(0 0 22px rgba(255, 102, 153, 0.4));
+            animation: flow 10s linear infinite;
+        }
+        h1 { margin-top: 10px; font-size: clamp(24px, 5vw, 34px); font-weight: 800; }
+        p { margin-top: 10px; font-size: 16px; color: var(--muted); }
+        a.home {
+            display: inline-block;
+            margin-top: 28px;
+            padding: 12px 26px;
+            font-weight: 700;
+            font-size: 15px;
+            color: #1d0c14;
+            text-decoration: none;
+            background: linear-gradient(135deg, var(--pink-1), var(--pink-3));
+            border-radius: 999px;
+            box-shadow: 0 0 24px rgba(255, 102, 153, 0.45);
+            cursor: var(--pointer);
+            transition: transform .2s ease, box-shadow .2s ease;
+        }
+        a.home:hover { transform: translateY(-2px) scale(1.03); box-shadow: 0 0 34px rgba(255, 102, 153, 0.6); }
+        a.home:focus-visible { outline: 2px solid var(--pink-1); outline-offset: 3px; }
+        @keyframes flow { from { background-position: 0% 50%; } to { background-position: 300% 50%; } }
+        @keyframes step { 0%, 100% { opacity: .15; } 30% { opacity: 1; } }
+        @media (prefers-reduced-motion: reduce) { * { animation: none !important; } }
+    </style>
+</head>
+<body>
+    <main class="box">
+        <div class="paws" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
+        <div class="code" aria-hidden="true">404</div>
+        <h1>whoopsies!</h1>
+        <p>this page wandered off somewhere&hellip;</p>
+        <a class="home" href="/">take me home &#9825;</a>
+    </main>
+    <script src="/js/trail.js?v=5" defer></script>
+</body>
+</html>

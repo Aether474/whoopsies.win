@@ -17,27 +17,33 @@
     <meta name="twitter:title" content="@.envy">
     <meta name="twitter:description" content="envy is just envy,">
 
-    <link rel="icon" type="image/jpeg" href="images/pfp.jpg?v=4">
-    <link rel="apple-touch-icon" href="images/pfp.jpg?v=4">
+    <link rel="icon" type="image/jpeg" href="images/pfp.jpg?v=5">
+    <link rel="apple-touch-icon" href="images/pfp.jpg?v=5">
 
     <link rel="preconnect" href="https://api.fontshare.com" crossorigin>
     <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700,900&display=swap">
-    <link rel="stylesheet" href="css/style.css?v=4">
+    <link rel="stylesheet" href="css/style.css?v=5">
 </head>
 <body class="is-locked">
 
     <!-- Background video -->
     <div class="bg" aria-hidden="true">
-        <video id="bgVideo" autoplay muted loop playsinline preload="auto" poster="images/bg-poster.jpg?v=4">
-            <source src="images/bg.mp4?v=4" type="video/mp4">
+        <video id="bgVideo" autoplay muted loop playsinline preload="auto" poster="images/bg-poster.jpg?v=5">
+            <source src="images/bg.mp4?v=5" type="video/mp4">
         </video>
         <div class="bg__shade"></div>
     </div>
+    <canvas class="weather" id="weather" aria-hidden="true"></canvas>
 
     <!-- Click-to-enter intro -->
-    <div class="intro" id="intro" role="button" tabindex="0" aria-label="Enter site">
+    <div class="intro is-loading" id="intro" role="button" tabindex="0" aria-label="Enter site">
         <div class="intro__inner">
             <div class="intro__title">whoopsies<span class="intro__heart">&#9825;</span></div>
+            <div class="intro__load" aria-hidden="true">
+                <div class="intro__paws"><span></span><span></span><span></span></div>
+                <div class="intro__bar"><div class="intro__fill" id="loadFill"></div></div>
+                <div class="intro__loadtxt" id="loadTxt">loading the room&hellip;</div>
+            </div>
             <div class="intro__hint"><span class="hint-desktop">click</span><span class="hint-touch">tap</span> anywhere to enter</div>
         </div>
     </div>
@@ -45,9 +51,12 @@
     <!-- Profile -->
     <main class="stage">
         <article class="card" id="card">
-            <button class="card__avatar" id="avatar" type="button" aria-label="profile picture">
-                <img src="images/pfp.jpg?v=4" alt="" width="489" height="489">
-            </button>
+            <div class="card__avatar-wrap">
+                <button class="card__avatar" id="avatar" type="button" aria-label="profile picture" title="boop?">
+                    <img src="images/pfp.jpg?v=5" alt="" width="489" height="489">
+                </button>
+                <span class="status" id="status" hidden></span>
+            </div>
 
             <h1 class="card__name"><span class="card__name-text">.envy</span></h1>
 
@@ -56,7 +65,7 @@
                     <svg viewBox="0 0 24 24" aria-hidden="true"><path class="fill" d="M12 20.3s-7.8-4.6-7.8-10.2A4.4 4.4 0 0 1 12 7.4a4.4 4.4 0 0 1 7.8 2.7c0 5.6-7.8 10.2-7.8 10.2Z"/></svg>
                     <span class="sr-only">whoopsies certified</span>
                 </li>
-                <li class="badge" tabindex="0" data-tip="sleepy">
+                <li class="badge" tabindex="0" data-tip="sleepy" id="moonBadge">
                     <svg viewBox="0 0 24 24" aria-hidden="true"><path class="fill" d="M20 14.6A8 8 0 0 1 9.4 4a8 8 0 1 0 10.6 10.6Z"/></svg>
                     <span class="sr-only">sleepy</span>
                 </li>
@@ -70,6 +79,14 @@
                 </li>
             </ul>
 
+            <div class="activity" id="activity" hidden>
+                <img class="activity__art" id="activityArt" alt="" hidden>
+                <div class="activity__text">
+                    <div class="activity__kind" id="activityKind"></div>
+                    <div class="activity__name" id="activityName"></div>
+                </div>
+            </div>
+
             <p class="card__bio" aria-live="polite"><span class="typed" id="typed"></span><span class="caret" aria-hidden="true"></span></p>
 
             <footer class="card__footer">
@@ -77,10 +94,19 @@
                     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.6-6.5 10-6.5S22 12 22 12s-3.6 6.5-10 6.5S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg>
                     <span id="views">&hellip;</span>
                 </span>
-                <span class="card__hint" aria-hidden="true">psst&hellip; there are secrets here</span>
+                <span class="card__hint" id="hint" title="secrets found">
+                    <span class="card__hint-text" id="hintText">psst&hellip; there are secrets here</span>
+                    <span class="card__secrets" id="secretCount">0/4</span>
+                </span>
             </footer>
         </article>
     </main>
+
+    <!-- Weather switch -->
+    <button class="weather-btn" id="weatherBtn" type="button" aria-label="Change weather">
+        <span class="weather-btn__icon" aria-hidden="true"></span>
+        <span class="weather-btn__label"></span>
+    </button>
 
     <!-- Music player -->
     <div class="player" id="player">
@@ -107,9 +133,10 @@
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
     <div class="fx" id="fx" aria-hidden="true"></div>
 
-    <audio id="audio" src="media/sakura.mp3?v=4" loop preload="auto"></audio>
+    <audio id="audio" src="media/sakura.mp3?v=5" loop preload="auto"></audio>
 
-    <script src="js/cursor-effects.min.js?v=4" defer></script>
-    <script src="js/main.js?v=4" defer></script>
+    <script src="js/weather.js?v=5" defer></script>
+    <script src="js/trail.js?v=5" defer></script>
+    <script src="js/main.js?v=5" defer></script>
 </body>
 </html>
