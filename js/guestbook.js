@@ -117,5 +117,6 @@ document.addEventListener("keydown", (e) => { if (e.key === "Escape" && !panel.h
 
 (async () => {
   try { backend = await getBackend(); } catch (e) { backend = null; }
-  if (backend) openBtn.hidden = false;
+  // Only show the guestbook once an owner is set (so messages can actually be approved)
+  if (backend && (backend.ownerId || window.__whoopsiesFakeBackend)) openBtn.hidden = false;
 })();

@@ -7,14 +7,13 @@
   Until FIREBASE is filled in, the guestbook button stays hidden.
 */
 window.WHOOPSIES_GUESTBOOK = {
-  FIREBASE: null,
-  // FIREBASE: {
-  //   apiKey: "...",
-  //   authDomain: "....firebaseapp.com",
-  //   projectId: "...",
-  //   storageBucket: "....appspot.com",
-  //   messagingSenderId: "...",
-  //   appId: "..."
-  // },
+  FIREBASE: {
+    apiKey: "AIzaSyBYBItRdDiR_yRe_xjfGALEmDWPQW7z1qw",
+    authDomain: "whoopsies-adcb1.firebaseapp.com",
+    projectId: "whoopsies-adcb1",
+    storageBucket: "whoopsies-adcb1.firebasestorage.app",
+    messagingSenderId: "406245013768",
+    appId: "1:406245013768:web:00c413e0e2dd9b7a63d4bd"
+  },
   OWNER_ID: ""
 };
