@@ -201,7 +201,7 @@
   var phrases = [
     "just a person, probably",
     "KITTYYYYYY",
-    "what the flip flop man",
+    "woof? (affectionate)",
     "tired",
     "whoopsies ♡"
   ];
