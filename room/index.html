@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://api.fontshare.com; font-src https://api.fontshare.com https://cdn.fontshare.com; img-src 'self' data:; media-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="robots" content="noindex">
+    <title>the secret room ✦</title>
+    <meta name="theme-color" content="#070a1c">
+    <link rel="icon" type="image/jpeg" href="/images/pfp.jpg?v=7">
+    <link rel="preconnect" href="https://api.fontshare.com" crossorigin>
+    <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700,900&display=swap">
+    <link rel="stylesheet" href="/room/room.css?v=1">
+</head>
+<body>
+    <canvas id="sky" aria-hidden="true"></canvas>
+
+    <!-- locked -->
+    <main class="door" id="locked" hidden>
+        <div class="door__lock" aria-hidden="true">&#128274;</div>
+        <h1>this door is locked</h1>
+        <p>find every secret on the main page to open it.</p>
+        <a class="btn" href="/">back to the room &#9825;</a>
+    </main>
+
+    <!-- tap to enter -->
+    <main class="door" id="gate" hidden>
+        <div class="door__lock" aria-hidden="true">&#10022;</div>
+        <h1>you found the secret room</h1>
+        <p>tap anywhere to step inside</p>
+    </main>
+
+    <!-- the room -->
+    <main class="letter" id="room" hidden>
+        <img class="letter__pfp" src="/images/pfp.jpg?v=7" alt="" width="96" height="96">
+        <h1>hi, you &#9825;</h1>
+        <p>if you're reading this, you found every single secret. that means you booped, shook, typed, waited up late and listened all the way through. thank you for exploring my little corner of the internet so carefully.</p>
+        <p>this room is just for people like you. make a wish and let a lantern go &mdash; tap anywhere in the sky.</p>
+        <p class="letter__sig">&mdash; person</p>
+        <p class="letter__count" id="count"></p>
+        <a class="btn btn--ghost" href="/">back to the main room</a>
+    </main>
+
+    <button class="mute" id="mute" type="button" aria-label="Mute music" hidden>&#9835; sakura zxc (slowed)</button>
+    <audio id="music" src="/media/sakura.mp3?v=15" loop preload="auto"></audio>
+
+    <script src="/room/room.js?v=1" defer></script>
+</body>
+</html>

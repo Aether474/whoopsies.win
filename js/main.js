@@ -437,7 +437,13 @@
     shake:  "give your phone a shake\u2026 or wiggle your mouse really fast",
     puppy:  "a tiny puppy wanders by sometimes. she loves pets",
     listen: "some people listen to the whole song\u2026",
-    name:   "what happens if you type my name?"
+    name:   "what happens if you type my name?",
+    night:  "visit late at night (11pm\u20137am my time) and check on me\u2026"
+  };
+  var TITLES = {
+    boop: "boop master", word: "the magic word", konami: "gamer code", stars: "wish upon a star",
+    shake: "earthquake", puppy: "puppy's best friend", listen: "true listener", name: "say my name",
+    night: "night owl"
   };
   var secretIds = Object.keys(SECRETS);
   var found = {};
@@ -497,6 +503,7 @@
   audio.addEventListener("seeking", function () { lastT = null; });
 
   function markFound(id, msg) {
+    if (!ach.hidden) setTimeout(renderAchievements, 50);
     var isNew = !found[id];
     found[id] = true;
     store("whoopsies-secrets", JSON.stringify(found));
@@ -509,6 +516,89 @@
       toast(msg);
     }
   }
+
+  // 9) night-only: click the little z's while I'm asleep
+  document.addEventListener("click", function (e) {
+    var t = e.target;
+    if (!t || !t.closest) return;
+    var asleep = document.documentElement.classList.contains("is-asleep");
+    if (t.closest(".zzz") || (asleep && t.closest("#status"))) {
+      markFound("night", "shh\u2026 she's sleeping \u263E");
+    }
+  });
+
+  /* ═════════════ achievements panel ═════════════ */
+  var ach = $("ach");
+  function renderAchievements() {
+    var n = foundCount(), total = secretIds.length;
+    $("achFill").style.width = Math.round((n / total) * 100) + "%";
+    $("achSummary").textContent = n === total ? "you found every secret \u2661" : n + " of " + total + " secrets found. stuck? tap hint!";
+    var list = $("achList");
+    list.textContent = "";
+    secretIds.forEach(function (id) {
+      var li = document.createElement("li");
+      li.className = "ev ach" + (found[id] ? " is-now" : "");
+      var ic = document.createElement("span");
+      ic.className = "ev__icon";
+      ic.textContent = found[id] ? "\u2713" : "?";
+      var body = document.createElement("div");
+      body.className = "ev__body";
+      var nm = document.createElement("span");
+      nm.className = "ev__name";
+      nm.textContent = found[id] ? TITLES[id] : "???";
+      var ds = document.createElement("p");
+      ds.className = "ev__desc";
+      ds.textContent = found[id] ? SECRETS[id] : "";
+      body.append(nm, ds);
+      li.append(ic, body);
+      if (!found[id]) {
+        var hb = document.createElement("button");
+        hb.type = "button";
+        hb.className = "ev__btn";
+        hb.textContent = "hint";
+        hb.onclick = function () { ds.textContent = SECRETS[id]; hb.remove(); };
+        li.appendChild(hb);
+      }
+      list.appendChild(li);
+    });
+    var stats = $("achStats");
+    stats.textContent = "";
+    [["visits", store("whoopsies-visits") || "1"], ["puppy pets", store("whoopsies-pets") || "0"], ["best bone catch", store("whoopsies-game-best") || "0"]].forEach(function (p) {
+      var d = document.createElement("div");
+      d.className = "ach__stat";
+      var b = document.createElement("b"); b.textContent = p[1];
+      var sp = document.createElement("span"); sp.textContent = p[0];
+      d.append(b, sp);
+      stats.appendChild(d);
+    });
+    var room = $("achRoom");
+    room.textContent = "";
+    if (store("whoopsies-reward") === "1") {
+      var a = document.createElement("a");
+      a.className = "ach__door";
+      a.href = "room/";
+      a.textContent = "enter the secret room \u2726";
+      room.appendChild(a);
+    } else {
+      var lock = document.createElement("p");
+      lock.className = "ach__locked";
+      lock.textContent = "\uD83D\uDD12 the secret room unlocks when you find every secret";
+      room.appendChild(lock);
+    }
+  }
+  function openAch() {
+    renderAchievements();
+    ach.hidden = false;
+    requestAnimationFrame(function () { ach.classList.add("is-open"); });
+  }
+  function closeAch() {
+    ach.classList.remove("is-open");
+    setTimeout(function () { ach.hidden = true; }, 300);
+  }
+  countEl.addEventListener("click", openAch);
+  $("achClose").addEventListener("click", closeAch);
+  ach.addEventListener("click", function (e) { if (e.target === ach) closeAch(); });
+  document.addEventListener("keydown", function (e) { if (e.key === "Escape" && !ach.hidden) closeAch(); });
 
   function startHints() {
     var i = 0;
