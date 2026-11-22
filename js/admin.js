@@ -1,5 +1,12 @@
 /* Guestbook admin page */
-import { getBackend, timeAgo } from "./guestbook-backend.js?v=13";
+import { getBackend, timeAgo } from "./guestbook-backend.js?v=14";
+
+// never run inside someone else's page (stops "clickjacking" tricks)
+if (window.top !== window.self) {
+    document.documentElement.innerHTML = "";
+    try { window.top.location = window.self.location.href; } catch (e) {}
+    throw new Error("framed");
+}
 
 const app = document.getElementById("app");
 const userBox = document.getElementById("userBox");
@@ -24,18 +31,18 @@ if (!backend) {
         const out = el("button", "", "sign out");
         out.onclick = () => backend.signOut();
         userBox.append(who, out);
-        if (!backend.ownerId || user.uid !== backend.ownerId) {
-            message('<p class="err">This account isn&rsquo;t set as the guestbook owner yet.</p>' +
-                '<p>If this is you, your account ID is below. Paste it into <code>js/guestbook-config.js</code> (OWNER_ID) and into your Firestore rules.</p>');
+        // The server decides who the owner is: if Firebase refuses to show waiting
+        // messages, this account isn't the owner.
+        backend.listPending().then(() => {
+            startIdleTimer();
+            loadAll();
+        }).catch(() => {
+            message('<p class="err">This account can&rsquo;t manage the guestbook.</p>' +
+                '<p>If this is you, your account ID is below \u2014 it has to match the one in your Firestore rules.</p>');
             const code = el("code", "", user.uid);
             code.style.cssText = "display:block;margin:0 auto 14px;padding:10px;border-radius:10px;background:rgba(255,255,255,.07);user-select:all;word-break:break-all";
-            const copy = el("button", "primary", "copy account ID");
-            copy.onclick = () => { navigator.clipboard && navigator.clipboard.writeText(user.uid); copy.textContent = "copied \u2661"; };
-            app.querySelector(".card").append(code, copy);
-            return;
-        }
-        startIdleTimer();
-        loadAll();
+            app.querySelector(".card").append(code);
+        });
     });
 }
 

@@ -1,5 +1,5 @@
 /* Guestbook panel on the main page */
-import { getBackend, timeAgo } from "./guestbook-backend.js?v=13";
+import { getBackend, timeAgo } from "./guestbook-backend.js?v=14";
 
 const openBtn = document.getElementById("gbOpen");
 const panel = document.getElementById("gb");
@@ -177,7 +177,7 @@ document.addEventListener("keydown", (e) => { if (e.key === "Escape" && !panel.h
 (async () => {
   try { backend = await getBackend(); } catch (e) { backend = null; }
   // Only show the guestbook once an owner is set (so messages can actually be approved)
-  if (backend && (backend.ownerId || window.__whoopsiesFakeBackend)) {
+  if (backend) {
     openBtn.hidden = false;
     // the little note on the card (set from the admin page)
     try {

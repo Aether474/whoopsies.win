@@ -17,6 +17,18 @@ export async function getBackend() {
   ]);
 
   const app = initializeApp(cfg.FIREBASE);
+
+  // App Check: Firebase only accepts requests that prove they come from this website
+  if (cfg.APP_CHECK_SITE_KEY) {
+    try {
+      const ac = await import(SDK + "firebase-app-check.js");
+      ac.initializeAppCheck(app, {
+        provider: new ac.ReCaptchaV3Provider(cfg.APP_CHECK_SITE_KEY),
+        isTokenAutoRefreshEnabled: true
+      });
+      document.documentElement.classList.add("has-recaptcha");
+    } catch (e) {}
+  }
   const db = fs.getFirestore(app);
   const au = auth.getAuth(app);
   // admin logins only last for this browser tab
@@ -40,7 +52,6 @@ export async function getBackend() {
       .sort((a, b) => (b.pinned - a.pinned) || (b.createdAt - a.createdAt));
 
   cached = {
-    ownerId: cfg.OWNER_ID || "",
 
     async listApproved() {
       const snap = await fs.getDocs(fs.query(col, fs.where("approved", "==", true), fs.limit(200)));
