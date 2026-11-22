@@ -102,6 +102,7 @@
     document.body.appendChild(h);
     setTimeout(function () { h.remove(); }, 1000);
     toast(n === 1 ? "you found the puppy! ♡" : "good puppy ♡ (pets: " + n + ")");
+    document.dispatchEvent(new CustomEvent("whoopsies:pet", { detail: n }));
   });
   pet.addEventListener("animationend", function () { pet.classList.remove("do-jump", "do-spin", "do-sit"); });
 

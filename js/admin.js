@@ -1,5 +1,5 @@
 /* Guestbook admin page */
-import { getBackend, timeAgo } from "./guestbook-backend.js?v=11";
+import { getBackend, timeAgo } from "./guestbook-backend.js?v=13";
 
 const app = document.getElementById("app");
 const userBox = document.getElementById("userBox");
@@ -34,8 +34,20 @@ if (!backend) {
             app.querySelector(".card").append(code, copy);
             return;
         }
+        startIdleTimer();
         loadAll();
     });
+}
+
+// sign out automatically after 20 minutes of doing nothing
+let idleTimer = null;
+function startIdleTimer() {
+    const reset = () => {
+        clearTimeout(idleTimer);
+        idleTimer = setTimeout(() => { backend.signOut(); }, 20 * 60 * 1000);
+    };
+    ["click", "keydown", "mousemove", "touchstart", "scroll"].forEach((ev) => window.addEventListener(ev, reset, { passive: true }));
+    reset();
 }
 
 function showSignIn() {
@@ -57,7 +69,7 @@ function showSignIn() {
 }
 
 function row(item, pending) {
-    const li = el("li");
+    const li = el("li", item.pinned ? "pinned" : "");
     const meta = el("div", "meta");
     meta.append(el("span", "name", item.name), el("span", "", timeAgo(item.createdAt)));
     li.append(meta, el("p", "msg", item.message));
@@ -77,6 +89,16 @@ function row(item, pending) {
             try { await backend.approve(item.id); loadAll(); } catch (e) { ok.disabled = false; alertErr(); }
         };
         actions.append(ok);
+    }
+
+    if (!pending) {
+        const pin = el("button", item.pinned ? "primary" : "", item.pinned ? "\u2605 pinned" : "pin");
+        pin.title = item.pinned ? "unpin" : "pin to the top of the guestbook";
+        pin.onclick = async () => { pin.disabled = true; try { await backend.pin(item.id, !item.pinned); loadAll(); } catch (e) { alertErr(); } };
+        const hide = el("button", "", "hide");
+        hide.title = "take it off the site without deleting (it goes back to waiting)";
+        hide.onclick = async () => { hide.disabled = true; try { await backend.hide(item.id); loadAll(); } catch (e) { alertErr(); } };
+        actions.append(pin, hide);
     }
 
     const rep = el("button", "", item.reply ? "edit reply" : "reply");
@@ -141,11 +163,60 @@ function section(title, items, pending) {
     return frag;
 }
 
+function statsBar(pending, approved) {
+    const box = el("div", "stats");
+    const stat = (num, label) => { const s = el("div", "stat"); s.append(el("b", "", String(num)), el("span", "", label)); return s; };
+    const views = stat("\u2026", "views");
+    box.append(views, stat(approved.length, "on the site"), stat(pending.length, "waiting"), stat(approved.filter((a) => a.reply).length, "replied"));
+    fetch("https://abacus.jasoncameron.dev/get/whoopsies.win/views")
+        .then((r) => r.json()).then((d) => { if (typeof d.value === "number") views.querySelector("b").textContent = d.value.toLocaleString(); })
+        .catch(() => { views.querySelector("b").textContent = "?"; });
+    return box;
+}
+
+async function noteEditor() {
+    const box = el("div", "card notebox");
+    box.append(el("h3", "", "note on your card"));
+    box.append(el("p", "hint", "a short line that shows under your bio, like \u201cback from vacation!\u201d. leave empty to hide it."));
+    const row1 = el("div", "noterow");
+    const input = el("input"); input.maxLength = 140; input.placeholder = "write a little note\u2026";
+    try { input.value = await backend.getNote(); } catch (e) {}
+    const save = el("button", "primary", "save");
+    const status = el("span", "hint");
+    save.onclick = async () => {
+        save.disabled = true; status.textContent = "";
+        try { await backend.setNote(input.value.trim()); status.textContent = "saved \u2661"; }
+        catch (e) { status.textContent = "couldn\u2019t save \u2014 publish the latest rules"; }
+        save.disabled = false;
+    };
+    row1.append(input, save);
+    box.append(row1, status);
+    return box;
+}
+
+function exportButton(all) {
+    const b = el("button", "", "export all messages");
+    b.onclick = () => {
+        const data = JSON.stringify(all.map((m) => ({
+            name: m.name, message: m.message, approved: m.approved, pinned: m.pinned,
+            reply: m.reply || "", date: new Date(m.createdAt).toISOString()
+        })), null, 2);
+        const url = URL.createObjectURL(new Blob([data], { type: "application/json" }));
+        const a = document.createElement("a");
+        a.href = url; a.download = "guestbook-" + new Date().toISOString().slice(0, 10) + ".json";
+        document.body.appendChild(a); a.click(); a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+    };
+    return b;
+}
+
 async function loadAll() {
     try {
         const [pending, approved] = await Promise.all([backend.listPending(), backend.listApproved()]);
         app.textContent = "";
-        app.append(section("waiting for approval", pending, true), section("on the site", approved, false));
+        const tools = el("div", "tools");
+        tools.append(exportButton(pending.concat(approved)));
+        app.append(statsBar(pending, approved), await noteEditor(), section("waiting for approval", pending, true), section("on the site", approved, false), tools);
     } catch (e) {
         alertErr();
     }

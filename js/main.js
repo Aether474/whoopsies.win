@@ -132,6 +132,24 @@
     else if (!document.hidden && pausedByHide) { pausedByHide = false; tryPlay(); }
   });
 
+  /* ═════════════ greeting ═════════════ */
+  (function () {
+    var h = new Date().getHours();
+    var part = h < 5 ? "it's late" : h < 12 ? "good morning" : h < 17 ? "good afternoon" : h < 22 ? "good evening" : "it's late";
+    var visits = parseInt(store("whoopsies-visits"), 10) || 0;
+    var counted = false;
+    try { counted = sessionStorage.getItem("whoopsies-counted") === "1"; } catch (e) {}
+    if (!counted) {
+      visits++;
+      store("whoopsies-visits", String(visits));
+      try { sessionStorage.setItem("whoopsies-counted", "1"); } catch (e) {}
+    }
+    var text;
+    if (visits <= 1) text = part === "it's late" ? "it's late\u2026 hi, new friend \u2661" : part + ", new friend \u2661";
+    else text = (part === "it's late" ? "up late? " : part + "! ") + "welcome back \u2661 visit #" + visits;
+    $("greet").textContent = text;
+  })();
+
   /* ═════════════ loading screen ═════════════ */
   (function () {
     var fillEl = $("loadFill"), txt = $("loadTxt");
@@ -416,7 +434,10 @@
     word:   "there's a magic word. it's on the intro screen",
     konami: "gamers know a code \u2191\u2191\u2193\u2193\u2026",
     stars:  "the moon gets sleepy if you hold it",
-    shake:  "give your phone a shake\u2026 or wiggle your mouse really fast"
+    shake:  "give your phone a shake\u2026 or wiggle your mouse really fast",
+    puppy:  "a tiny puppy wanders by sometimes. she loves pets",
+    listen: "some people listen to the whole song\u2026",
+    name:   "what happens if you type my name?"
   };
   var secretIds = Object.keys(SECRETS);
   var found = {};
@@ -436,6 +457,7 @@
 
   // reward for finding every secret
   function unlockReward(celebrate) {
+    store("whoopsies-reward", "1");
     var badge = $("rewardBadge");
     badge.hidden = false;
     if (window.whoopsiesWeather && window.whoopsiesWeather.unlockHearts) window.whoopsiesWeather.unlockHearts();
@@ -449,10 +471,30 @@
     close.onclick = shut;
     box.onclick = function (e) { if (e.target === box) shut(); };
   }
-  if (foundCount() === secretIds.length) {
+  // people who found all 5 original secrets (before more were added) keep their reward
+  if (found.boop && found.word && found.konami && found.stars && found.shake) store("whoopsies-reward", "1");
+  if (store("whoopsies-reward") === "1" || foundCount() === secretIds.length) {
     // weather.js loads before this file, so it's ready
     unlockReward(false);
   }
+
+  // 6) pet the puppy 3 times
+  document.addEventListener("whoopsies:pet", function (e) {
+    if (e.detail >= 3) markFound("puppy", "best friends with the puppy \u2661");
+  });
+
+  // 7) listen to the whole song (skipping ahead doesn't count)
+  var listened = 0, lastT = null;
+  audio.addEventListener("timeupdate", function () {
+    var t = audio.currentTime;
+    if (lastT !== null) {
+      var d = t - lastT;
+      if (d > 0 && d < 1.5) listened += d;
+    }
+    lastT = t;
+    if (!found.listen && audio.duration && listened >= audio.duration - 2) markFound("listen", "a true listener \u266A");
+  });
+  audio.addEventListener("seeking", function () { lastT = null; });
 
   function markFound(id, msg) {
     var isNew = !found[id];
@@ -608,6 +650,15 @@
 
     if (k.length === 1) {
       typedBuf = (typedBuf + k).slice(-12);
+      if (typedBuf.slice(-6) === "person") {
+        typedBuf = "";
+        var nm = document.querySelector(".card__name");
+        nm.classList.remove("is-glitch");
+        void nm.offsetWidth;
+        nm.classList.add("is-glitch");
+        setTimeout(function () { nm.classList.remove("is-glitch"); }, 2600);
+        markFound("name", "that's me! \u2726");
+      }
       if (typedBuf.slice(-9) === "whoopsies") {
         typedBuf = "";
         heartRain(45);

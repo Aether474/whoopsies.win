@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://www.gstatic.com; style-src 'self' 'unsafe-inline' https://api.fontshare.com; font-src 'self' https://api.fontshare.com https://cdn.fontshare.com; img-src 'self' data:; connect-src 'self' https://firestore.googleapis.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://www.gstatic.com; frame-src https://whoopsies-adcb1.firebaseapp.com; object-src 'none'; base-uri 'self'; form-action 'self'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://www.gstatic.com; style-src 'self' 'unsafe-inline' https://api.fontshare.com; font-src 'self' https://api.fontshare.com https://cdn.fontshare.com; img-src 'self' data:; connect-src 'self' https://abacus.jasoncameron.dev https://firestore.googleapis.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://www.gstatic.com; frame-src https://whoopsies-adcb1.firebaseapp.com; object-src 'none'; base-uri 'self'; form-action 'self'">
     <meta name="referrer" content="no-referrer">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>guestbook admin · whoopsies</title>
@@ -77,6 +77,20 @@
         .reply-form textarea { width: 100%; padding: 10px 12px; font: 500 14px/1.4 inherit; font-family: inherit; color: #fff; background: rgba(255,255,255,.07); border: 1px solid var(--edge); border-radius: 12px; resize: vertical; outline: none; }
         .reply-form textarea:focus { border-color: var(--pink-2); }
         .actions { flex-wrap: wrap; }
+        .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 14px; }
+        .stat { padding: 12px; text-align: center; background: rgba(24,10,18,.8); border: 1px solid var(--edge); border-radius: 14px; }
+        .stat b { display: block; font-size: 22px; font-weight: 800; color: var(--pink-1); }
+        .stat span { font-size: 12px; color: var(--muted); }
+        .notebox { padding: 16px 18px; margin-bottom: 6px; }
+        .notebox h3 { font-size: 15px; }
+        .hint { font-size: 12.5px; color: var(--muted); }
+        .notebox .hint { margin: 4px 0 10px; display: block; }
+        .noterow { display: flex; gap: 8px; }
+        .noterow input { flex: 1; min-width: 0; padding: 10px 12px; font: 500 14px/1.3 inherit; font-family: inherit; color: #fff; background: rgba(255,255,255,.07); border: 1px solid var(--edge); border-radius: 12px; outline: none; }
+        .noterow input:focus { border-color: var(--pink-2); }
+        .tools { margin-top: 22px; text-align: center; }
+        li.pinned { border-color: rgba(255, 215, 106, .45); }
+        @media (max-width: 520px) { .stats { grid-template-columns: repeat(2, 1fr); } }
         .login { display: grid; gap: 10px; max-width: 300px; margin: 0 auto; }
         .login input {
             padding: 11px 13px;
@@ -104,6 +118,6 @@
     </main>
 
     <script src="/js/guestbook-config.js?v=9"></script>
-    <script type="module" src="/js/admin.js?v=11"></script>
+    <script type="module" src="/js/admin.js?v=13"></script>
 </body>
 </html>

@@ -19,20 +19,20 @@
     <meta name="twitter:title" content="@person">
     <meta name="twitter:description" content="just a person, probably">
 
-    <link rel="icon" type="image/jpeg" href="images/pfp.jpg?v=12">
-    <link rel="apple-touch-icon" href="images/pfp.jpg?v=12">
+    <link rel="icon" type="image/jpeg" href="images/pfp.jpg?v=13">
+    <link rel="apple-touch-icon" href="images/pfp.jpg?v=13">
 
     <link rel="preconnect" href="https://api.fontshare.com" crossorigin>
     <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700,900&display=swap">
-    <script src="js/theme-init.js?v=12"></script>
-    <link rel="stylesheet" href="css/style.css?v=12">
+    <script src="js/theme-init.js?v=13"></script>
+    <link rel="stylesheet" href="css/style.css?v=13">
 </head>
 <body class="is-locked">
 
     <!-- Background video -->
     <div class="bg" aria-hidden="true">
-        <video id="bgVideo" autoplay muted loop playsinline preload="auto" poster="images/bg-poster.jpg?v=12">
-            <source src="images/bg.mp4?v=12" type="video/mp4">
+        <video id="bgVideo" autoplay muted loop playsinline preload="auto" poster="images/bg-poster.jpg?v=13">
+            <source src="images/bg.mp4?v=13" type="video/mp4">
         </video>
         <div class="bg__shade"></div>
     </div>
@@ -42,6 +42,7 @@
     <div class="intro is-loading" id="intro" role="button" tabindex="0" aria-label="Enter site">
         <div class="intro__inner">
             <div class="intro__title">whoopsies<span class="intro__heart">&#9825;</span></div>
+            <div class="intro__greet" id="greet"></div>
             <div class="intro__load" aria-hidden="true">
                 <div class="intro__paws"><span></span><span></span><span></span></div>
                 <div class="intro__bar"><div class="intro__fill" id="loadFill"></div></div>
@@ -56,7 +57,7 @@
         <article class="card" id="card">
             <div class="card__avatar-wrap">
                 <button class="card__avatar" id="avatar" type="button" aria-label="profile picture" title="boop?">
-                    <img src="images/pfp.jpg?v=12" alt="" width="500" height="500">
+                    <img src="images/pfp.jpg?v=13" alt="" width="500" height="500">
                 </button>
                 <span class="status status--online" id="status" data-tip="online" title="online"></span>
             </div>
@@ -92,6 +93,8 @@
 
             <p class="card__bio" aria-live="polite"><span class="typed" id="typed"></span><span class="caret" aria-hidden="true"></span></p>
 
+            <p class="card__note" id="siteNote" hidden><b aria-hidden="true">&#9733;</b> <span></span></p>
+
             <button class="gb-open" id="gbOpen" type="button" hidden>
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16v4Z"/><path d="M13.5 6.5l4 4"/></svg>
                 sign the guestbook
@@ -104,7 +107,7 @@
                 </span>
                 <span class="card__hint" id="hint" title="secrets found">
                     <span class="card__hint-text" id="hintText">psst&hellip; there are secrets here</span>
-                    <span class="card__secrets" id="secretCount">0/5</span>
+                    <span class="card__secrets" id="secretCount">0/8</span>
                 </span>
             </footer>
         </article>
@@ -163,6 +166,7 @@
         <span class="ticker__body" id="tickerBody">
             <span class="ticker__msg" id="tickerMsg"></span>
             <span class="ticker__name" id="tickerName"></span>
+            <span class="ticker__reply" id="tickerReply" hidden></span>
         </span>
     </button>
 
@@ -232,15 +236,15 @@
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
     <div class="fx" id="fx" aria-hidden="true"></div>
 
-    <audio id="audio" src="media/sakura.mp3?v=12" loop preload="auto"></audio>
+    <audio id="audio" src="media/sakura.mp3?v=13" loop preload="auto"></audio>
 
-    <script src="js/weather.js?v=12" defer></script>
-    <script src="js/seasons.js?v=12" defer></script>
-    <script src="js/trail.js?v=12" defer></script>
-    <script src="js/main.js?v=12" defer></script>
-    <script src="js/pet.js?v=12" defer></script>
-    <script src="js/snapshot.js?v=12" defer></script>
-    <script src="js/guestbook-config.js?v=12"></script>
-    <script type="module" src="js/guestbook.js?v=12"></script>
+    <script src="js/weather.js?v=13" defer></script>
+    <script src="js/seasons.js?v=13" defer></script>
+    <script src="js/trail.js?v=13" defer></script>
+    <script src="js/main.js?v=13" defer></script>
+    <script src="js/pet.js?v=13" defer></script>
+    <script src="js/snapshot.js?v=13" defer></script>
+    <script src="js/guestbook-config.js?v=13"></script>
+    <script type="module" src="js/guestbook.js?v=13"></script>
 </body>
 </html>

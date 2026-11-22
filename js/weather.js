@@ -23,10 +23,7 @@
   var choice = "auto";
   try { choice = localStorage.getItem("whoopsies-weather") || "auto"; } catch (e) {}
   // hearts mode is the reward for finding all 5 secrets
-  try {
-    var sec = JSON.parse(localStorage.getItem("whoopsies-secrets") || "{}") || {};
-    if (Object.keys(sec).filter(function (k) { return sec[k]; }).length >= 5) MODES.splice(MODES.length - 1, 0, "hearts");
-  } catch (e) {}
+  try { if (localStorage.getItem("whoopsies-reward") === "1") MODES.splice(MODES.length - 1, 0, "hearts"); } catch (e) {}
   if (MODES.indexOf(choice) < 0) choice = "auto";
   if (reduce && choice === "auto") choice = "off";
 

@@ -19,6 +19,8 @@ export async function getBackend() {
   const app = initializeApp(cfg.FIREBASE);
   const db = fs.getFirestore(app);
   const au = auth.getAuth(app);
+  // admin logins only last for this browser tab
+  try { await auth.setPersistence(au, auth.browserSessionPersistence); } catch (e) {}
   const col = fs.collection(db, "guestbook");
 
   const toList = (snap) =>
@@ -31,10 +33,11 @@ export async function getBackend() {
           message: v.message,
           approved: v.approved,
           reply: typeof v.reply === "string" ? v.reply : "",
+          pinned: v.pinned === true,
           createdAt: v.createdAt && v.createdAt.toMillis ? v.createdAt.toMillis() : Date.now()
         };
       })
-      .sort((a, b) => b.createdAt - a.createdAt);
+      .sort((a, b) => (b.pinned - a.pinned) || (b.createdAt - a.createdAt));
 
   cached = {
     ownerId: cfg.OWNER_ID || "",
@@ -65,6 +68,16 @@ export async function getBackend() {
     },
 
     async approve(id) { await fs.updateDoc(fs.doc(db, "guestbook", id), { approved: true }); },
+    async hide(id) { await fs.updateDoc(fs.doc(db, "guestbook", id), { approved: false, pinned: false }); },
+    async pin(id, on) { await fs.updateDoc(fs.doc(db, "guestbook", id), { pinned: !!on }); },
+
+    async getNote() {
+      const snap = await fs.getDoc(fs.doc(db, "meta", "site"));
+      return snap.exists() && typeof snap.data().note === "string" ? snap.data().note : "";
+    },
+    async setNote(text) {
+      await fs.setDoc(fs.doc(db, "meta", "site"), { note: text, updatedAt: fs.serverTimestamp() });
+    },
     async remove(id) { await fs.deleteDoc(fs.doc(db, "guestbook", id)); },
 
     onUser(cb) { return auth.onAuthStateChanged(au, cb); },

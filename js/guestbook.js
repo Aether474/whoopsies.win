@@ -1,5 +1,5 @@
 /* Guestbook panel on the main page */
-import { getBackend, timeAgo } from "./guestbook-backend.js?v=11";
+import { getBackend, timeAgo } from "./guestbook-backend.js?v=13";
 
 const openBtn = document.getElementById("gbOpen");
 const panel = document.getElementById("gb");
@@ -17,6 +17,7 @@ const ticker = document.getElementById("ticker");
 const tickerBody = document.getElementById("tickerBody");
 const tickerMsg = document.getElementById("tickerMsg");
 const tickerName = document.getElementById("tickerName");
+const tickerReply = document.getElementById("tickerReply");
 
 const COOLDOWN = 60 * 1000;
 const LINK_RE = /(https?:\/\/|www\.|\b[a-z0-9-]+\.(com|net|org|gg|io|xyz|ru|cn|top|link|ly|me|co)\b)/i;
@@ -57,6 +58,13 @@ function render(items) {
     const m = document.createElement("p");
     m.className = "gb__msg";
     m.textContent = it.message;
+    if (it.pinned) {
+      li.classList.add("is-pinned");
+      const pin = document.createElement("span");
+      pin.className = "gb__pin";
+      pin.textContent = "\u2605 pinned";
+      top.insertBefore(pin, top.lastChild);
+    }
     li.append(top, m);
     if (it.reply) {
       const r = document.createElement("div");
@@ -83,6 +91,12 @@ function startTicker(items) {
     const it = pool[i % pool.length];
     tickerMsg.textContent = "\u201c" + it.message + "\u201d";
     tickerName.textContent = "\u2014 " + it.name;
+    if (it.reply) {
+      tickerReply.textContent = "\u21b3 person: " + it.reply;
+      tickerReply.hidden = false;
+    } else {
+      tickerReply.hidden = true;
+    }
     i++;
   };
   show();
@@ -165,6 +179,12 @@ document.addEventListener("keydown", (e) => { if (e.key === "Escape" && !panel.h
   // Only show the guestbook once an owner is set (so messages can actually be approved)
   if (backend && (backend.ownerId || window.__whoopsiesFakeBackend)) {
     openBtn.hidden = false;
+    // the little note on the card (set from the admin page)
+    try {
+      const note = await backend.getNote();
+      const noteEl = document.getElementById("siteNote");
+      if (note && noteEl) { noteEl.querySelector("span").textContent = note; noteEl.hidden = false; }
+    } catch (e) {}
     // fill the ticker with approved messages (quietly; it just stays hidden if this fails)
     try { const items = await backend.listApproved(); render(items); startTicker(items); loaded = true; } catch (e) {}
   }

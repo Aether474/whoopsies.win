@@ -33,9 +33,10 @@ service cloud.firestore {
 
       // Only you can approve, reply or delete
       allow update: if isOwner()
-        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['approved', 'reply', 'repliedAt'])
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['approved', 'reply', 'repliedAt', 'pinned'])
         && (!('reply' in request.resource.data)
-            || (request.resource.data.reply is string && request.resource.data.reply.size() <= 500));
+            || (request.resource.data.reply is string && request.resource.data.reply.size() <= 500))
+        && (!('pinned' in request.resource.data) || request.resource.data.pinned is bool);
       allow delete: if isOwner();
     }
 
@@ -47,6 +48,15 @@ service cloud.firestore {
       allow update: if request.resource.data.keys().hasOnly(['last'])
         && request.resource.data.last == request.time
         && request.time > resource.data.last + duration.value(10, 's');
+    }
+
+    // The little note on the card: everyone can read it, only you can change it
+    match /meta/site {
+      allow read: if true;
+      allow write: if isOwner()
+        && request.resource.data.keys().hasOnly(['note', 'updatedAt'])
+        && request.resource.data.note is string
+        && request.resource.data.note.size() <= 140;
     }
 
     // Nothing else in the database is readable or writable

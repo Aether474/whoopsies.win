@@ -79,11 +79,14 @@
       wrap.appendChild(hat);
     }
     if (ev.id === "christmas" && card) {
-      var lights = document.createElement("div");
-      lights.className = "deco-lights";
-      lights.setAttribute("aria-hidden", "true");
-      for (var i = 0; i < 14; i++) lights.appendChild(document.createElement("span"));
-      card.appendChild(lights);
+      // two strings of lights, one each side of the profile picture
+      ["l", "r"].forEach(function (side) {
+        var lights = document.createElement("div");
+        lights.className = "deco-lights deco-lights--" + side;
+        lights.setAttribute("aria-hidden", "true");
+        for (var i = 0; i < 6; i++) lights.appendChild(document.createElement("span"));
+        card.appendChild(lights);
+      });
     }
     if (ev.id === "halloween") {
       decoLayer = document.createElement("div");
@@ -116,6 +119,25 @@
     var phase = h >= 8 && h < 17 ? "day" : (h >= 6 && h < 8) || (h >= 17 && h < 20) ? "dusk" : "night";
     root.classList.remove("time-day", "time-dusk", "time-night");
     root.classList.add("time-" + phase);
+    // late at night person is probably asleep
+    var asleep = h >= 23 || h < 7;
+    root.classList.toggle("is-asleep", asleep);
+    var dot = $("status");
+    if (dot) {
+      dot.setAttribute("data-tip", asleep ? "probably sleeping" : "online");
+      dot.setAttribute("title", asleep ? "probably sleeping" : "online");
+    }
+    var wrap = document.querySelector(".card__avatar-wrap");
+    if (wrap && asleep && !wrap.querySelector(".zzz")) {
+      var z = document.createElement("div");
+      z.className = "zzz";
+      z.setAttribute("aria-hidden", "true");
+      z.innerHTML = "<span>z</span><span>z</span><span>z</span>";
+      wrap.appendChild(z);
+    } else if (wrap && !asleep) {
+      var old = wrap.querySelector(".zzz");
+      if (old) old.remove();
+    }
     return phase;
   }
 
