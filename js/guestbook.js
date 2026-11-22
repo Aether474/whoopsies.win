@@ -13,7 +13,13 @@ const counter = document.getElementById("gbCount");
 const status = document.getElementById("gbStatus");
 const sendBtn = document.getElementById("gbSend");
 
+const ticker = document.getElementById("ticker");
+const tickerBody = document.getElementById("tickerBody");
+const tickerMsg = document.getElementById("tickerMsg");
+const tickerName = document.getElementById("tickerName");
+
 const COOLDOWN = 60 * 1000;
+const LINK_RE = /(https?:\/\/|www\.|\b[a-z0-9-]+\.(com|net|org|gg|io|xyz|ru|cn|top|link|ly|me|co)\b)/i;
 const store = {
   get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
   set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
@@ -56,10 +62,35 @@ function render(items) {
   }
 }
 
+let tickerTimer = null;
+function startTicker(items) {
+  clearInterval(tickerTimer);
+  if (!items.length) { ticker.hidden = true; return; }
+  const pool = items.slice(0, 30);
+  let i = Math.floor(Math.random() * pool.length);
+  const show = () => {
+    const it = pool[i % pool.length];
+    tickerMsg.textContent = "\u201c" + it.message + "\u201d";
+    tickerName.textContent = "\u2014 " + it.name;
+    i++;
+  };
+  show();
+  ticker.hidden = false;
+  if (pool.length > 1) {
+    tickerTimer = setInterval(() => {
+      if (document.hidden) return;
+      tickerBody.classList.add("is-out");
+      setTimeout(() => { show(); tickerBody.classList.remove("is-out"); }, 400);
+    }, 6500);
+  }
+}
+
 async function load() {
   list.innerHTML = '<li class="gb__empty">loading…</li>';
   try {
-    render(await backend.listApproved());
+    const items = await backend.listApproved();
+    render(items);
+    startTicker(items);
     loaded = true;
   } catch (e) {
     list.innerHTML = '<li class="gb__empty">couldn’t load messages right now</li>';
@@ -90,6 +121,7 @@ form.addEventListener("submit", async (e) => {
 
   if (trap.value) { setStatus("sent! ♡", "ok"); form.reset(); return; } // bots fill the hidden field
   if (!name || !message) { setStatus("add a name and a message ♡", "err"); return; }
+  if (LINK_RE.test(name) || LINK_RE.test(message)) { setStatus("no links please ♡", "err"); return; }
 
   const last = parseInt(store.get("whoopsies-gb-last"), 10) || 0;
   const wait = COOLDOWN - (Date.now() - last);
@@ -111,6 +143,7 @@ form.addEventListener("submit", async (e) => {
 });
 
 openBtn.addEventListener("click", open);
+ticker.addEventListener("click", open);
 closeBtn.addEventListener("click", close);
 panel.addEventListener("click", (e) => { if (e.target === panel) close(); });
 document.addEventListener("keydown", (e) => { if (e.key === "Escape" && !panel.hidden) close(); });
@@ -118,5 +151,9 @@ document.addEventListener("keydown", (e) => { if (e.key === "Escape" && !panel.h
 (async () => {
   try { backend = await getBackend(); } catch (e) { backend = null; }
   // Only show the guestbook once an owner is set (so messages can actually be approved)
-  if (backend && (backend.ownerId || window.__whoopsiesFakeBackend)) openBtn.hidden = false;
+  if (backend && (backend.ownerId || window.__whoopsiesFakeBackend)) {
+    openBtn.hidden = false;
+    // fill the ticker with approved messages (quietly; it just stays hidden if this fails)
+    try { const items = await backend.listApproved(); render(items); startTicker(items); loaded = true; } catch (e) {}
+  }
 })();

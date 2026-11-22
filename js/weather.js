@@ -49,6 +49,8 @@
   }
 
   function rand(a, b) { return a + Math.random() * (b - a); }
+  function isMono() { return document.documentElement.classList.contains("theme-mono"); }
+  document.addEventListener("whoopsies:theme", function () { if (mode !== "off") fill(); });
 
   function make(initial) {
     var p = { x: rand(0, W), y: initial ? rand(0, H) : rand(-60, -10), t: rand(0, Math.PI * 2) };
@@ -56,7 +58,7 @@
       case "petals":
         p.r = rand(5, 10); p.vy = rand(0.5, 1.2); p.vx = rand(0.2, 0.9);
         p.rot = rand(0, Math.PI * 2); p.vr = rand(-0.03, 0.03); p.flip = rand(0.02, 0.05);
-        p.c = ["#ffc6d6", "#ffb3c7", "#ffd9e4", "#ff9ab5"][(Math.random() * 4) | 0];
+        p.c = (isMono() ? ["#ffffff", "#ecebf1", "#d9d6e0", "#f6f5f9"] : ["#ffc6d6", "#ffb3c7", "#ffd9e4", "#ff9ab5"])[(Math.random() * 4) | 0];
         p.a = rand(0.65, 0.95);
         break;
       case "snow":
@@ -69,7 +71,7 @@
       case "leaves":
         p.r = rand(7, 12); p.vy = rand(0.6, 1.3); p.vx = rand(-0.4, 0.6);
         p.rot = rand(0, Math.PI * 2); p.vr = rand(-0.04, 0.04); p.flip = rand(0.02, 0.045);
-        p.c = ["#e8835a", "#d9534f", "#f0a35e", "#e066a3", "#c96a3b"][(Math.random() * 5) | 0];
+        p.c = (isMono() ? ["#d9d6e0", "#b5b0c2", "#8d889b", "#efeef3", "#a39fb0"] : ["#e8835a", "#d9534f", "#f0a35e", "#e066a3", "#c96a3b"])[(Math.random() * 5) | 0];
         p.a = rand(0.7, 0.95);
         break;
       case "fireflies":

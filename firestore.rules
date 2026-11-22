@@ -23,6 +23,11 @@ service cloud.firestore {
         && request.resource.data.message is string
         && request.resource.data.message.size() > 0
         && request.resource.data.message.size() <= 280
+        // not blank, and no links (spam is almost always links)
+        && request.resource.data.name.matches('(?s).*[^[:space:]].*')
+        && request.resource.data.message.matches('(?s).*[^[:space:]].*')
+        && !request.resource.data.name.matches('(?si).*(https?://|www[.]).*')
+        && !request.resource.data.message.matches('(?si).*(https?://|www[.]).*')
         && request.resource.data.createdAt == request.time;
 
       // Only you can approve or delete

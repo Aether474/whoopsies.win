@@ -181,6 +181,11 @@
       if (v && v.catch) v.catch(function () {});
     }
 
+    // iPhones need permission (asked once, inside this tap) for the shake secret
+    if (window.DeviceMotionEvent && typeof DeviceMotionEvent.requestPermission === "function") {
+      try { DeviceMotionEvent.requestPermission().catch(function () {}); } catch (e) {}
+    }
+
     intro.classList.add("is-gone");
     intro.setAttribute("aria-hidden", "true");
     intro.removeAttribute("tabindex");
@@ -314,6 +319,28 @@
     }
   }
 
+  var BONE = '<svg viewBox="0 0 40 18" width="100%" height="100%"><path d="M9 3a4 4 0 0 0-3.4 6A4 4 0 1 0 9 15h22a4 4 0 1 0 3.4-6A4 4 0 1 0 31 3Z" fill="#fff" stroke="#2a0f1b" stroke-width="2"/></svg>';
+  function boneRain(count) {
+    if (reduceMotion) return;
+    for (var i = 0; i < count; i++) {
+      (function (i) {
+        setTimeout(function () {
+          var h = document.createElement("span");
+          h.className = "fx__heart fx__heart--rain fx__bone";
+          h.innerHTML = BONE;
+          var w = 26 + Math.random() * 18;
+          h.style.width = w + "px"; h.style.height = (w * 0.45) + "px";
+          h.style.left = Math.random() * 100 + "vw";
+          h.style.setProperty("--drift", (Math.random() * 120 - 60) + "px");
+          h.style.setProperty("--spin", (Math.random() * 540 - 270) + "deg");
+          h.style.animationDuration = 2.4 + Math.random() * 2 + "s";
+          h.addEventListener("animationend", function () { h.remove(); });
+          fx.appendChild(h);
+        }, i * 60);
+      })(i);
+    }
+  }
+
   function heartBurst(x, y, count) {
     if (reduceMotion) return;
     for (var i = 0; i < count; i++) {
@@ -337,7 +364,8 @@
     boop:   "my picture likes boops\u2026 lots of them",
     word:   "there's a magic word. it's on the intro screen",
     konami: "gamers know a code \u2191\u2191\u2193\u2193\u2026",
-    stars:  "the moon gets sleepy if you hold it"
+    stars:  "the moon gets sleepy if you hold it",
+    shake:  "give your phone a shake\u2026 or wiggle your mouse really fast"
   };
   var secretIds = Object.keys(SECRETS);
   var found = {};
@@ -395,7 +423,9 @@
 
   // 1) click the profile picture 5 times quickly
   var avatar = $("avatar"), clicks = 0, clickTimer = null;
+  var suppressClick = false;
   avatar.addEventListener("click", function () {
+    if (suppressClick) { suppressClick = false; return; }
     clicks++;
     clearTimeout(clickTimer);
     clickTimer = setTimeout(function () { clicks = 0; }, 1200);
@@ -411,7 +441,81 @@
       heartBurst(r.left + r.width / 2, r.top + r.height / 2, 3);
     }
   });
-  avatar.addEventListener("animationend", function () { avatar.classList.remove("is-spinning"); });
+  avatar.addEventListener("animationend", function () { avatar.classList.remove("is-spinning", "is-wiggling"); });
+
+  // head pats: hover on desktop, press and hold on phones
+  var avatarWrap = avatar.parentNode, patTimer = null, patHearts = null, holdPat = null;
+  function startPats() {
+    if (avatarWrap.classList.contains("is-patting")) return;
+    avatarWrap.classList.add("is-patting");
+    clearInterval(patHearts);
+    patHearts = setInterval(function () {
+      var r = avatar.getBoundingClientRect();
+      heartBurst(r.left + r.width / 2 + (Math.random() * 60 - 30), r.top + 10, 1);
+    }, 450);
+  }
+  function stopPats() {
+    avatarWrap.classList.remove("is-patting");
+    clearInterval(patHearts);
+  }
+  if (finePointer) {
+    avatar.addEventListener("mouseenter", function () { patTimer = setTimeout(startPats, 250); });
+    avatar.addEventListener("mouseleave", function () { clearTimeout(patTimer); stopPats(); });
+  } else {
+    avatar.addEventListener("touchstart", function () {
+      holdPat = setTimeout(function () { startPats(); suppressClick = true; }, 380);
+    }, { passive: true });
+    ["touchend", "touchcancel"].forEach(function (ev) {
+      avatar.addEventListener(ev, function () { clearTimeout(holdPat); setTimeout(stopPats, 600); });
+    });
+    avatar.addEventListener("contextmenu", function (e) { e.preventDefault(); });
+  }
+
+  // 5) shake the phone (or wiggle the mouse fast)
+  function shakeSecret() {
+    avatar.classList.remove("is-wiggling");
+    void avatar.offsetWidth;
+    avatar.classList.add("is-wiggling");
+    boneRain(30);
+    if (navigator.vibrate) { try { navigator.vibrate([60, 40, 60]); } catch (e) {} }
+    markFound("shake", "woof woof! \u2661");
+  }
+  var lastShake = 0;
+  function shakeReady() { return entered && Date.now() - lastShake > 4000; }
+
+  var spikes = [], lastAcc = null;
+  window.addEventListener("devicemotion", function (e) {
+    var a = e.accelerationIncludingGravity;
+    if (!a || a.x == null) return;
+    if (lastAcc) {
+      var d = Math.abs(a.x - lastAcc.x) + Math.abs(a.y - lastAcc.y) + Math.abs(a.z - lastAcc.z);
+      var now = Date.now();
+      if (d > 28) { spikes.push(now); }
+      spikes = spikes.filter(function (t) { return now - t < 1000; });
+      if (spikes.length >= 4 && shakeReady()) { spikes = []; lastShake = now; shakeSecret(); }
+    }
+    lastAcc = { x: a.x, y: a.y, z: a.z };
+  });
+
+  if (finePointer) {
+    var lastX = null, dir = 0, flips = [], travel = 0;
+    window.addEventListener("mousemove", function (e) {
+      if (lastX === null) { lastX = e.clientX; return; }
+      var dx = e.clientX - lastX;
+      lastX = e.clientX;
+      if (Math.abs(dx) < 2) return;
+      var d = dx > 0 ? 1 : -1;
+      travel += Math.abs(dx);
+      if (d !== dir) {
+        var now = Date.now();
+        if (travel > 40) flips.push(now);
+        travel = 0;
+        dir = d;
+        flips = flips.filter(function (t) { return now - t < 1200; });
+        if (flips.length >= 6 && shakeReady()) { flips = []; lastShake = now; shakeSecret(); }
+      }
+    }, { passive: true });
+  }
 
   // 4) hold the moon badge
   var moon = $("moonBadge"), holdTimer = null;
@@ -531,6 +635,25 @@
       };
     }
     connect();
+  })();
+
+  /* ═════════════ theme switch ═════════════ */
+  (function () {
+    var btn = $("themeBtn"), label = $("themeLabel"), root = document.documentElement;
+    var meta = document.querySelector('meta[name="theme-color"]');
+    function apply() {
+      var mono = root.classList.contains("theme-mono");
+      label.textContent = mono ? "b&w" : "pink";
+      btn.setAttribute("aria-label", "Theme: " + (mono ? "black and white" : "pink") + ". Click to switch.");
+      if (meta) meta.setAttribute("content", mono ? "#0d0d10" : "#14080d");
+    }
+    btn.addEventListener("click", function () {
+      var mono = root.classList.toggle("theme-mono");
+      store("whoopsies-theme", mono ? "mono" : "pink");
+      apply();
+      document.dispatchEvent(new CustomEvent("whoopsies:theme"));
+    });
+    apply();
   })();
 
   syncPlayer();

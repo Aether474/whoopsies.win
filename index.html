@@ -2,6 +2,8 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://www.gstatic.com; style-src 'self' 'unsafe-inline' https://api.fontshare.com; font-src 'self' https://api.fontshare.com https://cdn.fontshare.com; img-src 'self' data: blob:; media-src 'self'; connect-src 'self' https://abacus.jasoncameron.dev https://firestore.googleapis.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://www.gstatic.com; frame-src https://whoopsies-adcb1.firebaseapp.com; object-src 'none'; base-uri 'self'; form-action 'self'">
+    <meta name="referrer" content="strict-origin-when-cross-origin">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>@person</title>
     <meta name="description" content="just a person, probably">
@@ -17,19 +19,20 @@
     <meta name="twitter:title" content="@person">
     <meta name="twitter:description" content="just a person, probably">
 
-    <link rel="icon" type="image/jpeg" href="images/pfp.jpg?v=7">
-    <link rel="apple-touch-icon" href="images/pfp.jpg?v=7">
+    <link rel="icon" type="image/jpeg" href="images/pfp.jpg?v=10">
+    <link rel="apple-touch-icon" href="images/pfp.jpg?v=10">
 
     <link rel="preconnect" href="https://api.fontshare.com" crossorigin>
     <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700,900&display=swap">
-    <link rel="stylesheet" href="css/style.css?v=7">
+    <script src="js/theme-init.js?v=10"></script>
+    <link rel="stylesheet" href="css/style.css?v=10">
 </head>
 <body class="is-locked">
 
     <!-- Background video -->
     <div class="bg" aria-hidden="true">
-        <video id="bgVideo" autoplay muted loop playsinline preload="auto" poster="images/bg-poster.jpg?v=6">
-            <source src="images/bg.mp4?v=6" type="video/mp4">
+        <video id="bgVideo" autoplay muted loop playsinline preload="auto" poster="images/bg-poster.jpg?v=10">
+            <source src="images/bg.mp4?v=10" type="video/mp4">
         </video>
         <div class="bg__shade"></div>
     </div>
@@ -53,9 +56,12 @@
         <article class="card" id="card">
             <div class="card__avatar-wrap">
                 <button class="card__avatar" id="avatar" type="button" aria-label="profile picture" title="boop?">
-                    <img src="images/pfp.jpg?v=7" alt="" width="500" height="500">
+                    <img src="images/pfp.jpg?v=10" alt="" width="500" height="500">
                 </button>
-                <span class="status" id="status" hidden></span>
+                <span class="status status--online" id="status" data-tip="online" title="online"></span>
+                <div class="pats" aria-hidden="true">
+                    <svg class="pats__hand" viewBox="0 0 64 48"><path d="M10 30c-4-1-6-5-4-8 2-2 5-2 8 0l4 2V12c0-3 2-5 5-5s5 2 5 5v-2c0-3 2-5 5-5s5 2 5 5v2c0-3 2-5 5-5s5 2 5 5v4c0-3 2-4 4-4s4 2 4 5v14c0 10-8 18-19 18H31c-8 0-13-4-17-9Z"/><path class="line" d="M23 12v14M33 10v14M43 12v13"/></svg>
+                </div>
             </div>
 
             <h1 class="card__name"><span class="card__name-text">person</span></h1>
@@ -97,16 +103,31 @@
                 </span>
                 <span class="card__hint" id="hint" title="secrets found">
                     <span class="card__hint-text" id="hintText">psst&hellip; there are secrets here</span>
-                    <span class="card__secrets" id="secretCount">0/4</span>
+                    <span class="card__secrets" id="secretCount">0/5</span>
                 </span>
             </footer>
         </article>
     </main>
 
-    <!-- Weather switch -->
-    <button class="weather-btn" id="weatherBtn" type="button" aria-label="Change weather">
-        <span class="weather-btn__icon" aria-hidden="true"></span>
-        <span class="weather-btn__label"></span>
+    <!-- Top-right controls -->
+    <div class="topbar">
+        <button class="pill-btn theme-btn" id="themeBtn" type="button" aria-label="Switch theme">
+            <span class="theme-btn__swatch" aria-hidden="true"></span>
+            <span class="theme-btn__label" id="themeLabel">pink</span>
+        </button>
+        <button class="pill-btn weather-btn" id="weatherBtn" type="button" aria-label="Change weather">
+            <span class="weather-btn__icon" aria-hidden="true"></span>
+            <span class="weather-btn__label"></span>
+        </button>
+    </div>
+
+    <!-- Guestbook ticker -->
+    <button class="ticker" id="ticker" type="button" hidden aria-label="Open the guestbook">
+        <span class="ticker__label">guestbook <span aria-hidden="true">&#9825;</span></span>
+        <span class="ticker__body" id="tickerBody">
+            <span class="ticker__msg" id="tickerMsg"></span>
+            <span class="ticker__name" id="tickerName"></span>
+        </span>
     </button>
 
     <!-- Music player -->
@@ -158,12 +179,12 @@
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
     <div class="fx" id="fx" aria-hidden="true"></div>
 
-    <audio id="audio" src="media/sakura.mp3?v=6" loop preload="auto"></audio>
+    <audio id="audio" src="media/sakura.mp3?v=10" loop preload="auto"></audio>
 
-    <script src="js/weather.js?v=6" defer></script>
-    <script src="js/trail.js?v=6" defer></script>
-    <script src="js/main.js?v=9" defer></script>
-    <script src="js/guestbook-config.js?v=9"></script>
-    <script type="module" src="js/guestbook.js?v=8"></script>
+    <script src="js/weather.js?v=10" defer></script>
+    <script src="js/trail.js?v=10" defer></script>
+    <script src="js/main.js?v=10" defer></script>
+    <script src="js/guestbook-config.js?v=10"></script>
+    <script type="module" src="js/guestbook.js?v=10"></script>
 </body>
 </html>

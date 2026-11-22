@@ -23,7 +23,16 @@
   resize();
   window.addEventListener("resize", resize);
 
-  var COLORS = ["#ffccd5", "#ff9ab5", "#ff6699", "#e066a3", "#f0f0ff"];
+  var PINK = ["#ffccd5", "#ff9ab5", "#ff6699", "#e066a3", "#f0f0ff"];
+  var MONO = ["#ffffff", "#e6e4ec", "#c9c5d3", "#a9a4b6", "#ffffff"];
+  var COLORS = PINK;
+  function syncTheme() {
+    mono = document.documentElement.classList.contains("theme-mono");
+    COLORS = mono ? MONO : PINK;
+  }
+  var mono = false;
+  syncTheme();
+  document.addEventListener("whoopsies:theme", syncTheme);
   var points = [];        // ribbon points {x, y, t}
   var sparks = [];        // sparkles
   var LIFE = 380;         // ms a ribbon point lives
@@ -111,8 +120,10 @@
         var p0 = points[i - 1], p1 = points[i];
         var age = (now - p1.t) / LIFE;            // 0 new → 1 old
         var k = 1 - age;
-        ctx.strokeStyle = "rgba(255," + Math.round(120 + 80 * k) + "," + Math.round(170 + 40 * k) + "," + (0.55 * k) + ")";
-        ctx.shadowColor = "rgba(255,102,153,0.9)";
+        ctx.strokeStyle = mono
+          ? "rgba(255,255,255," + (0.5 * k) + ")"
+          : "rgba(255," + Math.round(120 + 80 * k) + "," + Math.round(170 + 40 * k) + "," + (0.55 * k) + ")";
+        ctx.shadowColor = mono ? "rgba(255,255,255,0.8)" : "rgba(255,102,153,0.9)";
         ctx.shadowBlur = 12 * k;
         ctx.lineWidth = 1 + 5 * k;
         ctx.beginPath();
