@@ -30,6 +30,7 @@ export async function getBackend() {
           name: v.name,
           message: v.message,
           approved: v.approved,
+          reply: typeof v.reply === "string" ? v.reply : "",
           createdAt: v.createdAt && v.createdAt.toMillis ? v.createdAt.toMillis() : Date.now()
         };
       })
@@ -49,7 +50,18 @@ export async function getBackend() {
     },
 
     async submit(name, message) {
-      await fs.addDoc(col, { name, message, approved: false, createdAt: fs.serverTimestamp() });
+      // Written together with a site-wide "last message" timestamp; the rules only
+      // accept it if the previous message was more than 10 seconds ago.
+      const batch = fs.writeBatch(db);
+      batch.set(fs.doc(col), { name, message, approved: false, createdAt: fs.serverTimestamp() });
+      batch.set(fs.doc(db, "meta", "rate"), { last: fs.serverTimestamp() });
+      await batch.commit();
+    },
+
+    async reply(id, text) {
+      const ref = fs.doc(db, "guestbook", id);
+      if (text) await fs.updateDoc(ref, { reply: text, repliedAt: fs.serverTimestamp() });
+      else await fs.updateDoc(ref, { reply: fs.deleteField(), repliedAt: fs.deleteField() });
     },
 
     async approve(id) { await fs.updateDoc(fs.doc(db, "guestbook", id), { approved: true }); },

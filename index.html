@@ -19,20 +19,20 @@
     <meta name="twitter:title" content="@person">
     <meta name="twitter:description" content="just a person, probably">
 
-    <link rel="icon" type="image/jpeg" href="images/pfp.jpg?v=10">
-    <link rel="apple-touch-icon" href="images/pfp.jpg?v=10">
+    <link rel="icon" type="image/jpeg" href="images/pfp.jpg?v=11">
+    <link rel="apple-touch-icon" href="images/pfp.jpg?v=11">
 
     <link rel="preconnect" href="https://api.fontshare.com" crossorigin>
     <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700,900&display=swap">
-    <script src="js/theme-init.js?v=10"></script>
-    <link rel="stylesheet" href="css/style.css?v=10">
+    <script src="js/theme-init.js?v=11"></script>
+    <link rel="stylesheet" href="css/style.css?v=11">
 </head>
 <body class="is-locked">
 
     <!-- Background video -->
     <div class="bg" aria-hidden="true">
-        <video id="bgVideo" autoplay muted loop playsinline preload="auto" poster="images/bg-poster.jpg?v=10">
-            <source src="images/bg.mp4?v=10" type="video/mp4">
+        <video id="bgVideo" autoplay muted loop playsinline preload="auto" poster="images/bg-poster.jpg?v=11">
+            <source src="images/bg.mp4?v=11" type="video/mp4">
         </video>
         <div class="bg__shade"></div>
     </div>
@@ -56,7 +56,7 @@
         <article class="card" id="card">
             <div class="card__avatar-wrap">
                 <button class="card__avatar" id="avatar" type="button" aria-label="profile picture" title="boop?">
-                    <img src="images/pfp.jpg?v=10" alt="" width="500" height="500">
+                    <img src="images/pfp.jpg?v=11" alt="" width="500" height="500">
                 </button>
                 <span class="status status--online" id="status" data-tip="online" title="online"></span>
                 <div class="pats" aria-hidden="true">
@@ -78,6 +78,10 @@
                 <li class="badge" tabindex="0" data-tip="sparkly">
                     <svg viewBox="0 0 24 24" aria-hidden="true"><path class="fill" d="M12 2.5c.6 4.6 2.9 6.9 7.5 7.5-4.6.6-6.9 2.9-7.5 7.5-.6-4.6-2.9-6.9-7.5-7.5 4.6-.6 6.9-2.9 7.5-7.5Zm6.5 12.5c.3 2 1.2 3 3 3.3-1.8.3-2.7 1.2-3 3.2-.3-2-1.2-2.9-3-3.2 1.8-.3 2.7-1.3 3-3.3Z"/></svg>
                     <span class="sr-only">sparkly</span>
+                </li>
+                <li class="badge badge--reward" tabindex="0" data-tip="secret finder" id="rewardBadge" hidden>
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path class="fill" d="M3.5 8.5l4.2 3.2L12 5l4.3 6.7 4.2-3.2-1.8 9.5H5.3Z M5.5 19.5h13v1.8h-13z"/></svg>
+                    <span class="sr-only">secret finder</span>
                 </li>
             </ul>
 
@@ -137,7 +141,7 @@
             <svg class="i-play" viewBox="0 0 24 24" aria-hidden="true"><path class="fill" d="M8 5.2v13.6a.8.8 0 0 0 1.2.7l10.6-6.8a.8.8 0 0 0 0-1.4L9.2 4.5A.8.8 0 0 0 8 5.2Z"/></svg>
         </button>
         <div class="player__info">
-            <div class="player__title"><span class="player__note">&#9834;</span> sakura zxc</div>
+            <div class="player__title"><span class="viz" id="viz" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span></span> sakura zxc</div>
             <div class="player__bar" id="seek" role="slider" tabindex="0" aria-label="Song position" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
                 <div class="player__fill" id="seekFill"></div>
             </div>
@@ -176,15 +180,32 @@
         </section>
     </div>
 
+    <!-- Secret reward -->
+    <div class="reward" id="reward" hidden>
+        <div class="reward__card" role="dialog" aria-modal="true" aria-labelledby="rewardTitle">
+            <div class="reward__crown" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="M3.5 8.5l4.2 3.2L12 5l4.3 6.7 4.2-3.2-1.8 9.5H5.3Z M5.5 19.5h13v1.8h-13z"/></svg>
+            </div>
+            <h2 id="rewardTitle">you found every secret!</h2>
+            <p class="reward__note">thank you for poking around my little corner of the internet &#9825; you're officially a secret finder.</p>
+            <ul class="reward__list">
+                <li>a <strong>secret finder</strong> badge on the card</li>
+                <li>a new <strong>hearts</strong> weather mode (top right)</li>
+            </ul>
+            <p class="reward__sig">&mdash; person</p>
+            <button class="reward__btn" id="rewardClose" type="button">yay &#9825;</button>
+        </div>
+    </div>
+
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
     <div class="fx" id="fx" aria-hidden="true"></div>
 
-    <audio id="audio" src="media/sakura.mp3?v=10" loop preload="auto"></audio>
+    <audio id="audio" src="media/sakura.mp3?v=11" loop preload="auto"></audio>
 
-    <script src="js/weather.js?v=10" defer></script>
-    <script src="js/trail.js?v=10" defer></script>
-    <script src="js/main.js?v=10" defer></script>
-    <script src="js/guestbook-config.js?v=10"></script>
-    <script type="module" src="js/guestbook.js?v=10"></script>
+    <script src="js/weather.js?v=11" defer></script>
+    <script src="js/trail.js?v=11" defer></script>
+    <script src="js/main.js?v=11" defer></script>
+    <script src="js/guestbook-config.js?v=11"></script>
+    <script type="module" src="js/guestbook.js?v=11"></script>
 </body>
 </html>

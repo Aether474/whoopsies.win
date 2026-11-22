@@ -1,5 +1,5 @@
 /* Guestbook panel on the main page */
-import { getBackend, timeAgo } from "./guestbook-backend.js?v=6";
+import { getBackend, timeAgo } from "./guestbook-backend.js?v=11";
 
 const openBtn = document.getElementById("gbOpen");
 const panel = document.getElementById("gb");
@@ -58,6 +58,17 @@ function render(items) {
     m.className = "gb__msg";
     m.textContent = it.message;
     li.append(top, m);
+    if (it.reply) {
+      const r = document.createElement("div");
+      r.className = "gb__reply";
+      const who = document.createElement("span");
+      who.className = "gb__reply-who";
+      who.textContent = "person replied";
+      const txt = document.createElement("p");
+      txt.textContent = it.reply;
+      r.append(who, txt);
+      li.appendChild(r);
+    }
     list.appendChild(li);
   }
 }
@@ -136,7 +147,8 @@ form.addEventListener("submit", async (e) => {
     counter.textContent = "0/280";
     setStatus("sent! it’ll show up once it’s approved ♡", "ok");
   } catch (err) {
-    setStatus("whoopsies, that didn’t send. try again in a bit", "err");
+    if (err && err.code === "permission-denied") setStatus("someone just signed a moment ago \u2014 try again in a few seconds \u2661", "err");
+    else setStatus("whoopsies, that didn’t send. try again in a bit", "err");
   } finally {
     sendBtn.disabled = false;
   }

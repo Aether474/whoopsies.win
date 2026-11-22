@@ -10,7 +10,7 @@
   var ctx = canvas.getContext("2d");
 
   var MODES = ["auto", "petals", "snow", "rain", "leaves", "fireflies", "off"];
-  var ICONS = { petals: "❀", snow: "❄", rain: "☂", leaves: "❦", fireflies: "✧", off: "⊘" };
+  var ICONS = { petals: "❀", snow: "❄", rain: "☂", leaves: "❦", fireflies: "✧", hearts: "♥", off: "⊘" };
 
   function seasonMode() {
     var m = new Date().getMonth(); // 0 = Jan
@@ -22,6 +22,11 @@
 
   var choice = "auto";
   try { choice = localStorage.getItem("whoopsies-weather") || "auto"; } catch (e) {}
+  // hearts mode is the reward for finding all 5 secrets
+  try {
+    var sec = JSON.parse(localStorage.getItem("whoopsies-secrets") || "{}") || {};
+    if (Object.keys(sec).filter(function (k) { return sec[k]; }).length >= 5) MODES.splice(MODES.length - 1, 0, "hearts");
+  } catch (e) {}
   if (MODES.indexOf(choice) < 0) choice = "auto";
   if (reduce && choice === "auto") choice = "off";
 
@@ -44,7 +49,7 @@
 
   function count() {
     var area = (W * H) / (1440 * 900);
-    var base = { petals: 38, snow: 90, rain: 130, leaves: 26, fireflies: 34 }[mode] || 0;
+    var base = { petals: 38, snow: 90, rain: 130, leaves: 26, fireflies: 34, hearts: 30 }[mode] || 0;
     return Math.round(base * Math.max(0.45, Math.min(area, 1.6)));
   }
 
@@ -73,6 +78,11 @@
         p.rot = rand(0, Math.PI * 2); p.vr = rand(-0.04, 0.04); p.flip = rand(0.02, 0.045);
         p.c = (isMono() ? ["#d9d6e0", "#b5b0c2", "#8d889b", "#efeef3", "#a39fb0"] : ["#e8835a", "#d9534f", "#f0a35e", "#e066a3", "#c96a3b"])[(Math.random() * 5) | 0];
         p.a = rand(0.7, 0.95);
+        break;
+      case "hearts":
+        p.r = rand(6, 12); p.vy = rand(0.5, 1.1); p.vx = rand(-0.3, 0.3);
+        p.rot = rand(-0.4, 0.4); p.a = rand(0.6, 0.95);
+        p.c = (isMono() ? ["#ffffff", "#e6e4ec", "#cfccd8", "#ffffff"] : ["#ff6699", "#ff9ab5", "#ffc6d6", "#e066a3"])[(Math.random() * 4) | 0];
         break;
       case "fireflies":
         p.y = rand(H * 0.25, H); p.r = rand(1.2, 2.6); p.vx = rand(-0.25, 0.25); p.vy = rand(-0.25, 0.1);
@@ -141,6 +151,10 @@
           p.rot += p.vr * dt;
           p.t += p.flip * dt;
           break;
+        case "hearts":
+          p.x += (p.vx + wind * 0.4 + Math.sin(p.t) * 0.5) * dt;
+          p.y += p.vy * dt;
+          break;
         case "snow":
           p.x += (p.vx + wind * 0.5 + Math.sin(p.t) * 0.3) * dt;
           p.y += p.vy * dt;
@@ -170,6 +184,20 @@
       switch (mode) {
         case "petals": drawPetal(p); break;
         case "leaves": drawLeaf(p); break;
+        case "hearts":
+          ctx.save();
+          ctx.translate(p.x, p.y);
+          ctx.rotate(p.rot + Math.sin(p.t) * 0.2);
+          ctx.globalAlpha = p.a;
+          ctx.fillStyle = p.c;
+          var k = p.r / 6;
+          ctx.beginPath();
+          ctx.moveTo(0, 4 * k);
+          ctx.bezierCurveTo(-7 * k, -1 * k, -3.5 * k, -7 * k, 0, -3 * k);
+          ctx.bezierCurveTo(3.5 * k, -7 * k, 7 * k, -1 * k, 0, 4 * k);
+          ctx.fill();
+          ctx.restore();
+          break;
         case "snow":
           ctx.globalAlpha = p.a;
           ctx.fillStyle = "#fff";
@@ -260,6 +288,9 @@
   applyChoice();
 
   window.whoopsiesWeather = {
+    unlockHearts: function () {
+      if (MODES.indexOf("hearts") < 0) MODES.splice(MODES.length - 1, 0, "hearts");
+    },
     shootingStars: function (n) {
       n = n || 14;
       for (var i = 0; i < n; i++) {

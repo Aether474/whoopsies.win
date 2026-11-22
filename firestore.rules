@@ -1,7 +1,7 @@
 rules_version = '2';
 
 // Paste this into Firebase console → Firestore Database → Rules, then click Publish.
-// Replace YOUR_ACCOUNT_ID with the account ID shown on whoopsies.win/admin after you sign in.
+// YOUR_ACCOUNT_ID = the account ID shown on whoopsies.win/admin.
 
 service cloud.firestore {
   match /databases/{database}/documents {
@@ -10,30 +10,43 @@ service cloud.firestore {
       return request.auth != null && request.auth.uid == "YOUR_ACCOUNT_ID";
     }
 
+    function cleanText(s, max) {
+      return s is string
+        && s.size() > 0
+        && s.size() <= max
+        && s.matches('(?s).*[^[:space:]].*')             // not just spaces
+        && !s.matches('(?si).*(https?://|www[.]).*');    // no links
+    }
+
     match /guestbook/{id} {
       // Everyone can read approved messages; only you can see ones still waiting
       allow read: if resource.data.approved == true || isOwner();
 
-      // Anyone can leave a message, but it always starts unapproved
+      // Anyone can leave a message, but it always starts unapproved,
+      // and only one new message is accepted every 10 seconds site-wide
       allow create: if request.resource.data.keys().hasOnly(['name', 'message', 'approved', 'createdAt'])
         && request.resource.data.approved == false
-        && request.resource.data.name is string
-        && request.resource.data.name.size() > 0
-        && request.resource.data.name.size() <= 24
-        && request.resource.data.message is string
-        && request.resource.data.message.size() > 0
-        && request.resource.data.message.size() <= 280
-        // not blank, and no links (spam is almost always links)
-        && request.resource.data.name.matches('(?s).*[^[:space:]].*')
-        && request.resource.data.message.matches('(?s).*[^[:space:]].*')
-        && !request.resource.data.name.matches('(?si).*(https?://|www[.]).*')
-        && !request.resource.data.message.matches('(?si).*(https?://|www[.]).*')
-        && request.resource.data.createdAt == request.time;
+        && cleanText(request.resource.data.name, 24)
+        && cleanText(request.resource.data.message, 280)
+        && request.resource.data.createdAt == request.time
+        && getAfter(/databases/$(database)/documents/meta/rate).data.last == request.time;
 
-      // Only you can approve or delete
+      // Only you can approve, reply or delete
       allow update: if isOwner()
-        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['approved']);
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['approved', 'reply', 'repliedAt'])
+        && (!('reply' in request.resource.data)
+            || (request.resource.data.reply is string && request.resource.data.reply.size() <= 500));
       allow delete: if isOwner();
+    }
+
+    // Site-wide timestamp of the last guestbook message (the 10 second limit)
+    match /meta/rate {
+      allow read: if false;
+      allow create: if request.resource.data.keys().hasOnly(['last'])
+        && request.resource.data.last == request.time;
+      allow update: if request.resource.data.keys().hasOnly(['last'])
+        && request.resource.data.last == request.time
+        && request.time > resource.data.last + duration.value(10, 's');
     }
 
     // Nothing else in the database is readable or writable

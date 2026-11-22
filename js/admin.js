@@ -1,5 +1,5 @@
 /* Guestbook admin page */
-import { getBackend, timeAgo } from "./guestbook-backend.js?v=6";
+import { getBackend, timeAgo } from "./guestbook-backend.js?v=11";
 
 const app = document.getElementById("app");
 const userBox = document.getElementById("userBox");
@@ -60,15 +60,53 @@ function row(item, pending) {
     const li = el("li");
     const meta = el("div", "meta");
     meta.append(el("span", "name", item.name), el("span", "", timeAgo(item.createdAt)));
+    li.append(meta, el("p", "msg", item.message));
+
+    // existing reply
+    const replyBox = el("div", "reply");
+    if (item.reply) {
+        replyBox.append(el("span", "reply-who", "your reply"), el("p", "", item.reply));
+        li.append(replyBox);
+    }
+
     const actions = el("div", "actions");
     if (pending) {
-        const ok = el("button", "primary", "approve ♡");
+        const ok = el("button", "primary", "approve \u2661");
         ok.onclick = async () => {
             ok.disabled = true;
             try { await backend.approve(item.id); loadAll(); } catch (e) { ok.disabled = false; alertErr(); }
         };
         actions.append(ok);
     }
+
+    const rep = el("button", "", item.reply ? "edit reply" : "reply");
+    rep.onclick = () => {
+        if (li.querySelector(".reply-form")) return;
+        const form = el("form", "reply-form");
+        const ta = el("textarea");
+        ta.maxLength = 500; ta.rows = 3; ta.placeholder = "write a reply\u2026"; ta.value = item.reply || "";
+        const row2 = el("div", "actions");
+        const save = el("button", "primary", "save reply"); save.type = "submit";
+        const cancel = el("button", "", "cancel"); cancel.type = "button";
+        cancel.onclick = () => form.remove();
+        row2.append(save, cancel);
+        if (item.reply) {
+            const rm = el("button", "danger", "remove reply"); rm.type = "button";
+            rm.onclick = async () => { rm.disabled = true; try { await backend.reply(item.id, ""); loadAll(); } catch (e) { alertErr(); } };
+            row2.append(rm);
+        }
+        form.append(ta, row2);
+        form.onsubmit = async (e) => {
+            e.preventDefault();
+            const text = ta.value.trim();
+            save.disabled = true;
+            try { await backend.reply(item.id, text); loadAll(); } catch (x) { save.disabled = false; alertErr(); }
+        };
+        li.insertBefore(form, actions);
+        ta.focus();
+    };
+    actions.append(rep);
+
     const del = el("button", "danger", "delete");
     del.onclick = async () => {
         if (!confirm("Delete this message for good?")) return;
@@ -76,17 +114,27 @@ function row(item, pending) {
         try { await backend.remove(item.id); loadAll(); } catch (e) { del.disabled = false; alertErr(); }
     };
     actions.append(del);
-    li.append(meta, el("p", "msg", item.message), actions);
+    li.append(actions);
     return li;
 }
 
-function alertErr() { message('<p class="err">Something went wrong. Check that firestore.rules has your email, then reload.</p>'); }
+function alertErr() { message('<p class="err">Something went wrong. Make sure you published the latest Firestore rules, then reload.</p>'); }
 
 function section(title, items, pending) {
     const frag = document.createDocumentFragment();
     const h = el("h2", "", title + " ");
     h.append(el("span", "n", "(" + items.length + ")"));
     const ul = el("ul");
+    if (pending && items.length > 1) {
+        const all = el("button", "danger", "delete all " + items.length + " waiting");
+        all.style.marginLeft = "10px";
+        all.onclick = async () => {
+            if (!confirm("Delete all " + items.length + " waiting messages? Use this if you get spammed.")) return;
+            all.disabled = true;
+            try { for (const it of items) await backend.remove(it.id); loadAll(); } catch (e) { alertErr(); }
+        };
+        h.append(all);
+    }
     if (!items.length) ul.append(el("li", "empty", pending ? "nothing waiting — all caught up ♡" : "nothing here yet"));
     items.forEach((it) => ul.append(row(it, pending)));
     frag.append(h, ul);

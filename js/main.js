@@ -154,17 +154,58 @@
 
     function tick() {
       if (done) return;
-      var v = video ? frac(video) : 1, a = frac(audio);
-      var pct = Math.max(8, Math.round(((v + a) / 2) * 100));
+      var v = video ? frac(video) : 1;
+      var pct = Math.max(8, Math.round(Math.max(v, (Date.now() - start) / 3000) * 100));
       fillEl.style.width = pct + "%";
-      var vOk = !video || video.readyState >= 3, aOk = audio.readyState >= 3;
-      if (vOk && aOk) return ready();
-      if (Date.now() - start > 8000) { txt.textContent = "almost there\u2026"; }
-      if (Date.now() - start > 12000) return ready(); // don't keep anyone waiting forever
+      var vOk = !video || video.readyState >= 2;
+      if (vOk && Date.now() - start > 400) return ready();
+      if (Date.now() - start > 2000) { txt.textContent = "almost there\u2026"; }
+      if (Date.now() - start > 3000) return ready(); // never keep anyone waiting long
       setTimeout(tick, 150);
     }
     tick();
   })();
+
+  /* ═════════════ tiny music visualizer ═════════════ */
+  var vizCtx = null;
+  function startVisualizer() {
+    var bars = Array.prototype.slice.call(document.querySelectorAll("#viz span"));
+    if (!bars.length || reduceMotion) return;
+    var AC = window.AudioContext || window.webkitAudioContext;
+    var analyser = null, data = null;
+    if (AC) {
+      try {
+        vizCtx = new AC();
+        var src = vizCtx.createMediaElementSource(audio);
+        analyser = vizCtx.createAnalyser();
+        analyser.fftSize = 64;
+        analyser.smoothingTimeConstant = 0.75;
+        src.connect(analyser);
+        analyser.connect(vizCtx.destination);
+        data = new Uint8Array(analyser.frequencyBinCount);
+        if (vizCtx.state === "suspended") vizCtx.resume();
+        document.addEventListener("click", function () { if (vizCtx.state === "suspended") vizCtx.resume(); });
+      } catch (e) { analyser = null; }
+    }
+    var bins = [1, 3, 5, 8, 11];
+    function frame() {
+      if (!audio.paused && !document.hidden) {
+        if (analyser) {
+          analyser.getByteFrequencyData(data);
+          for (var i = 0; i < bars.length; i++) {
+            var v = data[bins[i]] / 255;
+            bars[i].style.height = Math.max(18, Math.round(v * v * 100)) + "%";
+          }
+        } else {
+          // fallback: gentle fake bounce
+          var t = performance.now() / 180;
+          for (var j = 0; j < bars.length; j++) bars[j].style.height = (35 + 55 * Math.abs(Math.sin(t + j * 1.3))) + "%";
+        }
+      }
+      requestAnimationFrame(frame);
+    }
+    requestAnimationFrame(frame);
+  }
 
   /* ═════════════ click to enter ═════════════ */
   function enter() {
@@ -175,6 +216,7 @@
     var p = audio.play();
     if (p && p.then) p.then(function () { fadeTo(targetVol(), 1800); }).catch(syncPlayer);
     else fadeTo(targetVol(), 1800);
+    startVisualizer();
 
     if (video && video.paused) {
       var v = video.play();
@@ -206,7 +248,6 @@
   var phrases = [
     "just a person, probably",
     "KITTYYYYYY",
-    "woof? (affectionate)",
     "tired",
     "whoopsies ♡"
   ];
@@ -383,6 +424,26 @@
   }
   renderCount();
 
+  // reward for finding every secret
+  function unlockReward(celebrate) {
+    var badge = $("rewardBadge");
+    badge.hidden = false;
+    if (window.whoopsiesWeather && window.whoopsiesWeather.unlockHearts) window.whoopsiesWeather.unlockHearts();
+    if (!celebrate) return;
+    badge.classList.add("is-new");
+    heartRain(70);
+    var box = $("reward"), close = $("rewardClose");
+    box.hidden = false;
+    close.focus({ preventScroll: true });
+    function shut() { box.hidden = true; }
+    close.onclick = shut;
+    box.onclick = function (e) { if (e.target === box) shut(); };
+  }
+  if (foundCount() === secretIds.length) {
+    // weather.js loads before this file, so it's ready
+    unlockReward(false);
+  }
+
   function markFound(id, msg) {
     var isNew = !found[id];
     found[id] = true;
@@ -391,7 +452,7 @@
     var n = foundCount();
     if (isNew) {
       toast(msg + "  \u00b7  " + n + "/" + secretIds.length + " secrets");
-      if (n === secretIds.length) setTimeout(function () { toast("you found every secret \u2661 ily"); heartRain(70); }, 2900);
+      if (n === secretIds.length) setTimeout(function () { unlockReward(true); }, 2600);
     } else {
       toast(msg);
     }
@@ -426,6 +487,7 @@
   var suppressClick = false;
   avatar.addEventListener("click", function () {
     if (suppressClick) { suppressClick = false; return; }
+    boopReact();
     clicks++;
     clearTimeout(clickTimer);
     clickTimer = setTimeout(function () { clicks = 0; }, 1200);
@@ -441,11 +503,27 @@
       heartBurst(r.left + r.width / 2, r.top + r.height / 2, 3);
     }
   });
-  avatar.addEventListener("animationend", function () { avatar.classList.remove("is-spinning", "is-wiggling"); });
+  avatar.addEventListener("animationend", function () { avatar.classList.remove("is-spinning", "is-wiggling", "is-booped"); });
 
   // head pats: hover on desktop, press and hold on phones
-  var avatarWrap = avatar.parentNode, patTimer = null, patHearts = null, holdPat = null;
+  var avatarWrap = avatar.parentNode, patTimer = null, patHearts = null, holdPat = null, patPauseUntil = 0;
+  function boopReact() {
+    stopPats();
+    patPauseUntil = Date.now() + 1500;
+    clearTimeout(patTimer);
+    if (finePointer) patTimer = setTimeout(function () { if (avatar.matches(":hover")) startPats(); }, 1600);
+    avatar.classList.remove("is-booped");
+    void avatar.offsetWidth;
+    avatar.classList.add("is-booped");
+    var pop = document.createElement("span");
+    pop.className = "boop-pop";
+    pop.textContent = "boop!";
+    pop.style.left = (40 + Math.random() * 20) + "%";
+    avatarWrap.appendChild(pop);
+    setTimeout(function () { pop.remove(); }, 900);
+  }
   function startPats() {
+    if (Date.now() < patPauseUntil) return;
     if (avatarWrap.classList.contains("is-patting")) return;
     avatarWrap.classList.add("is-patting");
     clearInterval(patHearts);
@@ -473,6 +551,7 @@
 
   // 5) shake the phone (or wiggle the mouse fast)
   function shakeSecret() {
+    stopPats();
     avatar.classList.remove("is-wiggling");
     void avatar.offsetWidth;
     avatar.classList.add("is-wiggling");
