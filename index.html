@@ -19,20 +19,20 @@
     <meta name="twitter:title" content="@person">
     <meta name="twitter:description" content="just a person, probably">
 
-    <link rel="icon" type="image/jpeg" href="images/pfp.jpg?v=11">
-    <link rel="apple-touch-icon" href="images/pfp.jpg?v=11">
+    <link rel="icon" type="image/jpeg" href="images/pfp.jpg?v=12">
+    <link rel="apple-touch-icon" href="images/pfp.jpg?v=12">
 
     <link rel="preconnect" href="https://api.fontshare.com" crossorigin>
     <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700,900&display=swap">
-    <script src="js/theme-init.js?v=11"></script>
-    <link rel="stylesheet" href="css/style.css?v=11">
+    <script src="js/theme-init.js?v=12"></script>
+    <link rel="stylesheet" href="css/style.css?v=12">
 </head>
 <body class="is-locked">
 
     <!-- Background video -->
     <div class="bg" aria-hidden="true">
-        <video id="bgVideo" autoplay muted loop playsinline preload="auto" poster="images/bg-poster.jpg?v=11">
-            <source src="images/bg.mp4?v=11" type="video/mp4">
+        <video id="bgVideo" autoplay muted loop playsinline preload="auto" poster="images/bg-poster.jpg?v=12">
+            <source src="images/bg.mp4?v=12" type="video/mp4">
         </video>
         <div class="bg__shade"></div>
     </div>
@@ -56,12 +56,9 @@
         <article class="card" id="card">
             <div class="card__avatar-wrap">
                 <button class="card__avatar" id="avatar" type="button" aria-label="profile picture" title="boop?">
-                    <img src="images/pfp.jpg?v=11" alt="" width="500" height="500">
+                    <img src="images/pfp.jpg?v=12" alt="" width="500" height="500">
                 </button>
                 <span class="status status--online" id="status" data-tip="online" title="online"></span>
-                <div class="pats" aria-hidden="true">
-                    <svg class="pats__hand" viewBox="0 0 64 48"><path d="M10 30c-4-1-6-5-4-8 2-2 5-2 8 0l4 2V12c0-3 2-5 5-5s5 2 5 5v-2c0-3 2-5 5-5s5 2 5 5v2c0-3 2-5 5-5s5 2 5 5v4c0-3 2-4 4-4s4 2 4 5v14c0 10-8 18-19 18H31c-8 0-13-4-17-9Z"/><path class="line" d="M23 12v14M33 10v14M43 12v13"/></svg>
-                </div>
             </div>
 
             <h1 class="card__name"><span class="card__name-text">person</span></h1>
@@ -115,6 +112,10 @@
 
     <!-- Top-right controls -->
     <div class="topbar">
+        <button class="pill-btn snap-btn" id="snapBtn" type="button" aria-label="Take a snapshot of the card">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8.5A2.5 2.5 0 0 1 6.5 6h1.7l1.3-2h5l1.3 2h1.7A2.5 2.5 0 0 1 20 8.5v8a2.5 2.5 0 0 1-2.5 2.5h-11A2.5 2.5 0 0 1 4 16.5Z"/><circle cx="12" cy="12.5" r="3.5"/></svg>
+            <span class="snap-btn__label">snapshot</span>
+        </button>
         <button class="pill-btn theme-btn" id="themeBtn" type="button" aria-label="Switch theme">
             <span class="theme-btn__swatch" aria-hidden="true"></span>
             <span class="theme-btn__label" id="themeLabel">pink</span>
@@ -123,6 +124,37 @@
             <span class="weather-btn__icon" aria-hidden="true"></span>
             <span class="weather-btn__label"></span>
         </button>
+    </div>
+
+    <!-- Seasonal events side tab -->
+    <button class="events-tab" id="eventsTab" type="button" aria-label="Seasonal events">
+        <span class="events-tab__text" id="eventsTabText">check out the seasonal events! &#10022;</span>
+        <span class="events-tab__short" aria-hidden="true">events &#10022;</span>
+    </button>
+
+    <div class="events" id="events" hidden>
+        <section class="events__panel" role="dialog" aria-modal="true" aria-labelledby="eventsTitle">
+            <header class="gb__head">
+                <h2 id="eventsTitle">seasonal events <span aria-hidden="true">&#10022;</span></h2>
+                <button class="gb__close" id="eventsClose" type="button" aria-label="Close">&times;</button>
+            </header>
+            <p class="events__clock" id="eventsClock"></p>
+            <p class="events__intro">the room dresses up for different times of year. tap preview to see one early!</p>
+            <ul class="events__list" id="eventsList"></ul>
+            <button class="events__stop" id="eventsStop" type="button" hidden>stop preview</button>
+        </section>
+    </div>
+
+    <!-- Snapshot -->
+    <div class="snap" id="snap" hidden>
+        <section class="snap__panel" role="dialog" aria-modal="true" aria-label="Snapshot">
+            <img class="snap__img" id="snapImg" alt="a snapshot of person's card">
+            <div class="snap__actions">
+                <button class="gb__send" id="snapSave" type="button">save picture</button>
+                <button class="snap__ghost" id="snapShare" type="button" hidden>share</button>
+                <button class="snap__ghost" id="snapClose" type="button">close</button>
+            </div>
+        </section>
     </div>
 
     <!-- Guestbook ticker -->
@@ -200,12 +232,15 @@
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
     <div class="fx" id="fx" aria-hidden="true"></div>
 
-    <audio id="audio" src="media/sakura.mp3?v=11" loop preload="auto"></audio>
+    <audio id="audio" src="media/sakura.mp3?v=12" loop preload="auto"></audio>
 
-    <script src="js/weather.js?v=11" defer></script>
-    <script src="js/trail.js?v=11" defer></script>
-    <script src="js/main.js?v=11" defer></script>
-    <script src="js/guestbook-config.js?v=11"></script>
-    <script type="module" src="js/guestbook.js?v=11"></script>
+    <script src="js/weather.js?v=12" defer></script>
+    <script src="js/seasons.js?v=12" defer></script>
+    <script src="js/trail.js?v=12" defer></script>
+    <script src="js/main.js?v=12" defer></script>
+    <script src="js/pet.js?v=12" defer></script>
+    <script src="js/snapshot.js?v=12" defer></script>
+    <script src="js/guestbook-config.js?v=12"></script>
+    <script type="module" src="js/guestbook.js?v=12"></script>
 </body>
 </html>

@@ -167,39 +167,17 @@
   })();
 
   /* ═════════════ tiny music visualizer ═════════════ */
-  var vizCtx = null;
+  // Purely visual: it never touches the audio itself, so it can't affect playback.
   function startVisualizer() {
     var bars = Array.prototype.slice.call(document.querySelectorAll("#viz span"));
     if (!bars.length || reduceMotion) return;
-    var AC = window.AudioContext || window.webkitAudioContext;
-    var analyser = null, data = null;
-    if (AC) {
-      try {
-        vizCtx = new AC();
-        var src = vizCtx.createMediaElementSource(audio);
-        analyser = vizCtx.createAnalyser();
-        analyser.fftSize = 64;
-        analyser.smoothingTimeConstant = 0.75;
-        src.connect(analyser);
-        analyser.connect(vizCtx.destination);
-        data = new Uint8Array(analyser.frequencyBinCount);
-        if (vizCtx.state === "suspended") vizCtx.resume();
-        document.addEventListener("click", function () { if (vizCtx.state === "suspended") vizCtx.resume(); });
-      } catch (e) { analyser = null; }
-    }
-    var bins = [1, 3, 5, 8, 11];
+    var seeds = bars.map(function () { return Math.random() * 10; });
     function frame() {
       if (!audio.paused && !document.hidden) {
-        if (analyser) {
-          analyser.getByteFrequencyData(data);
-          for (var i = 0; i < bars.length; i++) {
-            var v = data[bins[i]] / 255;
-            bars[i].style.height = Math.max(18, Math.round(v * v * 100)) + "%";
-          }
-        } else {
-          // fallback: gentle fake bounce
-          var t = performance.now() / 180;
-          for (var j = 0; j < bars.length; j++) bars[j].style.height = (35 + 55 * Math.abs(Math.sin(t + j * 1.3))) + "%";
+        var t = performance.now() / 1000;
+        for (var i = 0; i < bars.length; i++) {
+          var v = 0.5 + 0.28 * Math.sin(t * (5.5 + i * 1.7) + seeds[i]) + 0.22 * Math.sin(t * (9.1 + i * 2.3) + seeds[i] * 2);
+          bars[i].style.height = Math.round(22 + v * 74) + "%";
         }
       }
       requestAnimationFrame(frame);
@@ -217,6 +195,8 @@
     if (p && p.then) p.then(function () { fadeTo(targetVol(), 1800); }).catch(syncPlayer);
     else fadeTo(targetVol(), 1800);
     startVisualizer();
+    // create the click-sound engine inside the tap so phones allow it
+    try { var AC0 = window.AudioContext || window.webkitAudioContext; if (AC0 && !clickCtx) { clickCtx = new AC0(); clickCtx.resume(); } } catch (e) {}
 
     if (video && video.paused) {
       var v = video.play();
@@ -248,11 +228,40 @@
   var phrases = [
     "just a person, probably",
     "KITTYYYYYY",
+    "probably asleep rn",
     "tired",
     "whoopsies ♡"
   ];
   var typedEl = $("typed");
   var caret = document.querySelector(".caret");
+
+  // soft keyboard clicks for the typing bio (made with code, no sound file)
+  var clickCtx = null, noise = null;
+  function keyClick() {
+    if (muted || volume === 0 || document.hidden || reduceMotion) return;
+    var AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return;
+    try {
+      if (!clickCtx) clickCtx = new AC();
+      if (!noise) {
+        noise = clickCtx.createBuffer(1, Math.floor(clickCtx.sampleRate * 0.03), clickCtx.sampleRate);
+        var d = noise.getChannelData(0);
+        for (var i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / d.length, 4);
+      }
+      if (clickCtx.state === "suspended") clickCtx.resume();
+      var src = clickCtx.createBufferSource();
+      src.buffer = noise;
+      src.playbackRate.value = 0.85 + Math.random() * 0.3;
+      var bp = clickCtx.createBiquadFilter();
+      bp.type = "bandpass";
+      bp.frequency.value = 2400 + Math.random() * 900;
+      bp.Q.value = 1.2;
+      var g = clickCtx.createGain();
+      g.gain.value = 0.07 * Math.min(1, volume / 0.45);
+      src.connect(bp); bp.connect(g); g.connect(clickCtx.destination);
+      src.start();
+    } catch (e) {}
+  }
 
   function startTyping() {
     if (reduceMotion) { typedEl.textContent = phrases[0]; return; }
@@ -262,6 +271,7 @@
       caret.classList.add("is-typing");
       if (c < word.length) {
         typedEl.textContent = word.slice(0, ++c);
+        if (word.charAt(c - 1) !== " ") keyClick();
         setTimeout(type, 75 + Math.random() * 60);
       } else {
         caret.classList.remove("is-typing");
@@ -505,13 +515,9 @@
   });
   avatar.addEventListener("animationend", function () { avatar.classList.remove("is-spinning", "is-wiggling", "is-booped"); });
 
-  // head pats: hover on desktop, press and hold on phones
-  var avatarWrap = avatar.parentNode, patTimer = null, patHearts = null, holdPat = null, patPauseUntil = 0;
+  // boop reaction
+  var avatarWrap = avatar.parentNode;
   function boopReact() {
-    stopPats();
-    patPauseUntil = Date.now() + 1500;
-    clearTimeout(patTimer);
-    if (finePointer) patTimer = setTimeout(function () { if (avatar.matches(":hover")) startPats(); }, 1600);
     avatar.classList.remove("is-booped");
     void avatar.offsetWidth;
     avatar.classList.add("is-booped");
@@ -522,42 +528,15 @@
     avatarWrap.appendChild(pop);
     setTimeout(function () { pop.remove(); }, 900);
   }
-  function startPats() {
-    if (Date.now() < patPauseUntil) return;
-    if (avatarWrap.classList.contains("is-patting")) return;
-    avatarWrap.classList.add("is-patting");
-    clearInterval(patHearts);
-    patHearts = setInterval(function () {
-      var r = avatar.getBoundingClientRect();
-      heartBurst(r.left + r.width / 2 + (Math.random() * 60 - 30), r.top + 10, 1);
-    }, 450);
-  }
-  function stopPats() {
-    avatarWrap.classList.remove("is-patting");
-    clearInterval(patHearts);
-  }
-  if (finePointer) {
-    avatar.addEventListener("mouseenter", function () { patTimer = setTimeout(startPats, 250); });
-    avatar.addEventListener("mouseleave", function () { clearTimeout(patTimer); stopPats(); });
-  } else {
-    avatar.addEventListener("touchstart", function () {
-      holdPat = setTimeout(function () { startPats(); suppressClick = true; }, 380);
-    }, { passive: true });
-    ["touchend", "touchcancel"].forEach(function (ev) {
-      avatar.addEventListener(ev, function () { clearTimeout(holdPat); setTimeout(stopPats, 600); });
-    });
-    avatar.addEventListener("contextmenu", function (e) { e.preventDefault(); });
-  }
 
   // 5) shake the phone (or wiggle the mouse fast)
   function shakeSecret() {
-    stopPats();
     avatar.classList.remove("is-wiggling");
     void avatar.offsetWidth;
     avatar.classList.add("is-wiggling");
     boneRain(30);
     if (navigator.vibrate) { try { navigator.vibrate([60, 40, 60]); } catch (e) {} }
-    markFound("shake", "woof woof! \u2661");
+    markFound("shake", "whoa, the room is spinning\u2026 \u2727");
   }
   var lastShake = 0;
   function shakeReady() { return entered && Date.now() - lastShake > 4000; }

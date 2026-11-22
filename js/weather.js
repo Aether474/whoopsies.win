@@ -10,7 +10,7 @@
   var ctx = canvas.getContext("2d");
 
   var MODES = ["auto", "petals", "snow", "rain", "leaves", "fireflies", "off"];
-  var ICONS = { petals: "❀", snow: "❄", rain: "☂", leaves: "❦", fireflies: "✧", hearts: "♥", off: "⊘" };
+  var ICONS = { petals: "❀", snow: "❄", rain: "☂", leaves: "❦", fireflies: "✧", hearts: "♥", fireworks: "✺", off: "⊘" };
 
   function seasonMode() {
     var m = new Date().getMonth(); // 0 = Jan
@@ -31,6 +31,8 @@
   if (reduce && choice === "auto") choice = "off";
 
   var mode = "off";
+  var autoOverride = null, forced = null; // set by seasonal events
+  var sparks = [];
   var parts = [];
   var stars = [];
   var W = 0, H = 0, dpr = 1;
@@ -49,7 +51,8 @@
 
   function count() {
     var area = (W * H) / (1440 * 900);
-    var base = { petals: 38, snow: 90, rain: 130, leaves: 26, fireflies: 34, hearts: 30 }[mode] || 0;
+    var base = { petals: 38, snow: 90, rain: 130, leaves: 26, fireflies: 34, hearts: 30, fireworks: 4 }[mode] || 0;
+    if (mode === "fireworks") return base;
     return Math.round(base * Math.max(0.45, Math.min(area, 1.6)));
   }
 
@@ -78,6 +81,12 @@
         p.rot = rand(0, Math.PI * 2); p.vr = rand(-0.04, 0.04); p.flip = rand(0.02, 0.045);
         p.c = (isMono() ? ["#d9d6e0", "#b5b0c2", "#8d889b", "#efeef3", "#a39fb0"] : ["#e8835a", "#d9534f", "#f0a35e", "#e066a3", "#c96a3b"])[(Math.random() * 5) | 0];
         p.a = rand(0.7, 0.95);
+        break;
+      case "fireworks":
+        p.y = H + 10; p.x = rand(W * 0.1, W * 0.9);
+        p.vy = -rand(7, 10); p.top = rand(H * 0.1, H * 0.45);
+        p.wait = initial ? rand(0, 160) : rand(30, 140);
+        p.c = (isMono() ? ["#ffffff", "#dcdce4", "#bfbfcc"] : ["#ff6699", "#ffd76a", "#9fd8ff", "#c9a0ff", "#ffb3c7"])[(Math.random() * (isMono() ? 3 : 5)) | 0];
         break;
       case "hearts":
         p.r = rand(6, 12); p.vy = rand(0.5, 1.1); p.vx = rand(-0.3, 0.3);
@@ -151,6 +160,19 @@
           p.rot += p.vr * dt;
           p.t += p.flip * dt;
           break;
+        case "fireworks":
+          if (p.wait > 0) { p.wait -= dt; break; }
+          p.y += p.vy * dt;
+          if (p.y <= p.top) {
+            var n = 46;
+            for (var q = 0; q < n; q++) {
+              var a = (Math.PI * 2 * q) / n + rand(-0.05, 0.05), sp = rand(1.5, 4.2);
+              sparks.push({ x: p.x, y: p.y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, life: 1, c: p.c });
+            }
+            parts[i] = make(false);
+            continue;
+          }
+          break;
         case "hearts":
           p.x += (p.vx + wind * 0.4 + Math.sin(p.t) * 0.5) * dt;
           p.y += p.vy * dt;
@@ -170,6 +192,7 @@
           if (p.y < H * 0.1) p.vy += 0.05;
           break;
       }
+      if (mode === "fireworks") continue;
       var off = mode === "fireflies"
         ? (p.x < -20 || p.x > W + 20 || p.y > H + 20)
         : (p.y > H + 30 || p.x < -40 || p.x > W + 40);
@@ -184,6 +207,14 @@
       switch (mode) {
         case "petals": drawPetal(p); break;
         case "leaves": drawLeaf(p); break;
+        case "fireworks":
+          if (p.wait > 0) break;
+          ctx.globalAlpha = 0.9;
+          ctx.fillStyle = p.c;
+          ctx.beginPath(); ctx.arc(p.x, p.y, 2, 0, Math.PI * 2); ctx.fill();
+          ctx.globalAlpha = 0.35;
+          ctx.fillRect(p.x - 0.75, p.y, 1.5, 14);
+          break;
         case "hearts":
           ctx.save();
           ctx.translate(p.x, p.y);
@@ -223,6 +254,17 @@
     }
     ctx.globalAlpha = 1;
 
+    // firework sparks
+    for (var f = sparks.length - 1; f >= 0; f--) {
+      var k2 = sparks[f];
+      k2.x += k2.vx; k2.y += k2.vy; k2.vy += 0.05; k2.vx *= 0.985; k2.life -= 0.014;
+      if (k2.life <= 0) { sparks.splice(f, 1); continue; }
+      ctx.globalAlpha = k2.life;
+      ctx.fillStyle = k2.c;
+      ctx.beginPath(); ctx.arc(k2.x, k2.y, 1.8, 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+
     // shooting stars
     for (var j = stars.length - 1; j >= 0; j--) {
       var s = stars[j];
@@ -248,7 +290,7 @@
     lastT = t;
     step(dt);
     draw();
-    if (mode === "off" && !stars.length) { running = false; ctx.clearRect(0, 0, W, H); return; }
+    if (mode === "off" && !stars.length && !sparks.length) { running = false; ctx.clearRect(0, 0, W, H); return; }
     requestAnimationFrame(loop);
   }
 
@@ -259,11 +301,11 @@
   }
 
   function applyChoice() {
-    mode = choice === "auto" ? seasonMode() : choice;
+    mode = forced || (choice === "auto" ? (autoOverride || seasonMode()) : choice);
     canvas.classList.toggle("is-rain", mode === "rain");
     fill();
     if (btn) {
-      var label = choice === "auto" ? "auto · " + mode : mode;
+      var label = forced ? "event · " + mode : choice === "auto" ? "auto · " + mode : mode;
       btn.querySelector(".weather-btn__icon").textContent = ICONS[mode] || ICONS.off;
       btn.querySelector(".weather-btn__label").textContent = label;
       btn.setAttribute("aria-label", "Weather: " + label + ". Click to change.");
@@ -274,6 +316,7 @@
 
   if (btn) {
     btn.addEventListener("click", function () {
+      forced = null;
       choice = MODES[(MODES.indexOf(choice) + 1) % MODES.length];
       try { localStorage.setItem("whoopsies-weather", choice); } catch (e) {}
       applyChoice();
@@ -288,6 +331,11 @@
   applyChoice();
 
   window.whoopsiesWeather = {
+    setAuto: function (m, isPreview) {
+      if (isPreview) forced = m;
+      else { forced = null; autoOverride = m; }
+      applyChoice();
+    },
     unlockHearts: function () {
       if (MODES.indexOf("hearts") < 0) MODES.splice(MODES.length - 1, 0, "hearts");
     },
